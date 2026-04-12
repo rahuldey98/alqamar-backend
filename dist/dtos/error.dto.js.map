@@ -1,0 +1,1 @@
+{"version":3,"file":"error.dto.js","sourceRoot":"","sources":["../../src/dtos/error.dto.ts"],"names":[],"mappings":"","sourcesContent":["export interface ApiErrorResponse{\n    status: 'fail'\n}"]}
