@@ -1,1 +1,0 @@
-{"version":3,"file":"AlqJwtPayload.js","sourceRoot":"","sources":["../../src/types/AlqJwtPayload.ts"],"names":[],"mappings":"","sourcesContent":["export interface AlqJwtPayload {\n    userId: string,\n    role: string\n}\n\n"]}
