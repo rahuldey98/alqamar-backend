@@ -2,7 +2,7 @@ import {Router} from "express";
 import {authUser} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
 import {getUser, getUsers, patchUser, postUser} from "./user.controller";
-import {createUserSchema, updateUserSchema} from "./user.validator";
+import {createUserSchema, updateUserSchema} from "./user.schema";
 
 const router = Router();
 
