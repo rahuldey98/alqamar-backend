@@ -1,7 +1,7 @@
 import {ErrorRequestHandler} from "express";
-import {AppError} from "../utils/app-error";
+import {AppError} from "./app-error";
 import {ZodError} from "zod";
-import { ApiErrorResponse } from "@rahuldey98/alqamar-models";
+import {ApiErrorResponse} from "@rahuldey98/alqamar-models";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let statusCode = 500;
@@ -25,8 +25,8 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
         status: "error",
         message,
         errors,
-        stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
     };
 
     res.status(statusCode).json(response);
-}
+};

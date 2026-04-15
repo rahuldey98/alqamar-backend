@@ -1,4 +1,4 @@
-import {Request, Response, NextFunction} from "express";
+import type {NextFunction, Request, Response} from "express";
 import {ZodObject} from "zod";
 
 export const validateRequest = (schema: ZodObject) => {
@@ -7,8 +7,8 @@ export const validateRequest = (schema: ZodObject) => {
             body: req.body,
             query: req.query,
             params: req.params,
-            headers: req.headers
-        })
+            headers: req.headers,
+        });
         next();
-    }
-}
+    };
+};

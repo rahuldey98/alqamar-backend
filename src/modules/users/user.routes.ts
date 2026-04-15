@@ -1,0 +1,16 @@
+import {Router} from "express";
+import {authUser} from "../../common/middleware/auth.middleware";
+import {validateRequest} from "../../common/middleware/validate.middleware";
+import {getUser, getUsers, patchUser, postUser} from "./user.controller";
+import {createUserSchema, updateUserSchema} from "./user.validator";
+
+const router = Router();
+
+router.use(authUser);
+
+router.get("/", getUsers);
+router.get("/:id", getUser);
+router.post("/", validateRequest(createUserSchema), postUser);
+router.patch("/:id", validateRequest(updateUserSchema), patchUser);
+
+export default router;
