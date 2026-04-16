@@ -1,7 +1,7 @@
 import type {NextFunction, Request, Response} from "express";
 import {UserRequestDto} from "@rahuldey98/alqamar-models";
 import {sendResponse} from "../../common/send-response";
-import {userService} from "./user.service";
+import {userService} from "./service";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {

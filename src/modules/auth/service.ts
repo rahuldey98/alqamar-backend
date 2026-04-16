@@ -3,7 +3,7 @@ import {generateToken} from "../../utils/jwt";
 import {verifyPassword} from "../../utils/password";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
-import {mapUserToUserResponseDto} from "../users/user.mapper";
+import {mapUserToUserResponseDto} from "../users/mapper";
 
 const login = async (user: LoginRequestDto): Promise<LoginResponseDto> => {
     const dbUser = await prisma.user.findUnique({

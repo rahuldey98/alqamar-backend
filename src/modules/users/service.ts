@@ -3,7 +3,7 @@ import type {Prisma} from "@prisma/client";
 import {UserRequestDto, UserResponseDto} from "@rahuldey98/alqamar-models";
 import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
-import {mapUserToUserResponseDto} from "./user.mapper";
+import {mapUserToUserResponseDto} from "./mapper";
 
 const getAllUsers = async (): Promise<UserResponseDto[]> => {
     const dbUsers = await prisma.user.findMany();

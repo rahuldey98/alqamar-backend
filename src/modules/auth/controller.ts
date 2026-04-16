@@ -1,7 +1,7 @@
 import type {NextFunction, Request, Response} from "express";
 import {LoginRequestDto} from "@rahuldey98/alqamar-models";
 import {sendResponse} from "../../common/send-response";
-import {authService} from "./auth.service";
+import {authService} from "./service";
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
