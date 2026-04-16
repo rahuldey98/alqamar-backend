@@ -7,15 +7,15 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
-  phone     String     @unique
+  phone     String   @unique
   email     String?
   password  String
   role      UserRole
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  status    Status   @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
@@ -24,7 +24,7 @@ enum UserRole {
   STUDENT
 }
 
-enum UserStatus {
+enum Status {
   ACTIVE
   INACTIVE
 }
