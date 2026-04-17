@@ -17,20 +17,60 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  classes Class[]
+  taughtClasses Class[]        @relation("TeacherClasses")
+  enrollments   ClassStudent[] @relation("StudentEnrollments")
 }
 
 model Class {
-  id          Int      @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   name        String
-  subject     String
-  teacher     User     @relation(fields: [teacherId], references: [id])
+  subject     ClassSubject
+  teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
   teacherId   Int
   meetLink    String?
   description String?
-  status      Status   @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      Status       @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  schedules ClassSchedule[]
+  students  ClassStudent[]
+}
+
+model ClassSchedule {
+  id        Int       @id @default(autoincrement())
+  class     Class     @relation(fields: [classId], references: [id])
+  classId   Int
+  dayOfWeek DayOfWeek
+  startTime DateTime
+  endTime   DateTime
+  status    Status    @default(ACTIVE)
+}
+
+model ClassStudent {
+  id        Int   @id @default(autoincrement())
+  classId   Int
+  class     Class @relation(fields: [classId], references: [id])
+  studentId Int
+  user      User? @relation("StudentEnrollments", fields: [userId], references: [id])
+  userId    Int?
+
+  @@unique([classId, studentId])
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum ClassSubject {
+  ARABIC
+  URDU
 }
 
 enum UserRole {
