@@ -9,7 +9,11 @@
     "build": "tsc -p tsconfig.json",
     "dev": "nodemon",
     "start": "node dist/app.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:db:seed": "npx prisma db seed",
+    "prisma:migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.6.0",
