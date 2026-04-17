@@ -1,7 +1,13 @@
 import {ErrorRequestHandler} from "express";
 import {AppError} from "./app-error";
 import {ZodError} from "zod";
-import {ApiErrorResponse} from "@rahuldey98/alqamar-models";
+
+interface ApiErrorResponse {
+    status: "error";
+    message: string;
+    errors?: Record<string, string>;
+    stack?: string;
+}
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let statusCode = 500;

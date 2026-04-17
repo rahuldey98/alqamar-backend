@@ -1,5 +1,10 @@
-import {ApiSuccessResponse} from "@rahuldey98/alqamar-models";
 import {Response} from "express";
+
+interface ApiSuccessResponse<T> {
+    status: "success";
+    message?: string;
+    data: T;
+}
 
 export const sendResponse = <T>(
     res: Response,

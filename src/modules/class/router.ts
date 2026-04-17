@@ -1,9 +1,11 @@
 import {Router} from "express";
+import {createClasses} from "./controller";
+import {validateRequest} from "../../common/middleware/validate.middleware";
+import {createClassesSchema} from "./schema";
 
 const router = Router()
 
-router.post("/classes")
+router.post("/", validateRequest(createClassesSchema), createClasses)
 
-router.get("/classes")
 
 export default router

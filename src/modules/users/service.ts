@@ -1,43 +1,59 @@
 import {prisma} from "../../db/prisma";
 import type {Prisma} from "@prisma/client";
-import {UserRequestDto, UserResponseDto} from "@rahuldey98/alqamar-models";
 import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
-import {mapUserToUserResponseDto} from "./mapper";
+import {UserRequestDto} from "./schema";
 
-const getAllUsers = async (): Promise<UserResponseDto[]> => {
-    const dbUsers = await prisma.user.findMany();
-    return dbUsers.map(mapUserToUserResponseDto);
+const userSelect = {
+    id: true,
+    name: true,
+    phone: true,
+    email: true,
+    role: true,
+    gender: true,
+    age: true,
+    status: true,
+    createdAt: true,
+    updatedAt: true,
+} satisfies Prisma.UserSelect;
+
+const getUsers = async () => {
+    return prisma.user.findMany({
+        select: userSelect,
+    });
 };
 
-const getUserById = async (id: string): Promise<UserResponseDto> => {
+const getUserById = async (id: string) => {
     const dbUser = await prisma.user.findUnique({
         where: {id: parseInt(id)},
+        select: userSelect,
     });
     if (!dbUser) {
         throw new AppError("No user found", 400);
     }
-    return mapUserToUserResponseDto(dbUser);
+    return dbUser
 };
 
-const createUser = async (user: UserRequestDto): Promise<UserResponseDto> => {
+const createUser = async (user: UserRequestDto) => {
     const plainPassword = user.password || createDefaultPassword(user.name);
     const hashedPassword = await hashPassword(plainPassword);
 
-    const createdUser = await prisma.user.create({
+    return prisma.user.create({
         data: {
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        password: hashedPassword,
-        role: user.role,
-        status: user.status,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            password: hashedPassword,
+            role: user.role,
+            status: user.status,
+            gender: user.gender,
+            age: user.age,
         },
+        select: userSelect,
     });
-    return mapUserToUserResponseDto(createdUser);
 };
 
-const updateUser = async (id: string, user: Partial<UserRequestDto>): Promise<UserResponseDto> => {
+const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
     const updateData: Prisma.UserUpdateInput = {};
 
     if (user.name !== undefined) updateData.name = user.name;
@@ -45,6 +61,8 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>): Promise<Us
     if (user.email !== undefined) updateData.email = user.email;
     if (user.role !== undefined) updateData.role = user.role;
     if (user.status !== undefined) updateData.status = user.status;
+    if (user.gender !== undefined) updateData.gender = user.gender;
+    if (user.age !== undefined) updateData.age = user.age;
     if (user.password !== undefined) {
         updateData.password = await hashPassword(user.password);
     }
@@ -52,8 +70,9 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>): Promise<Us
     const updatedUser = await prisma.user.update({
         where: {id: parseInt(id)},
         data: updateData,
+        select: userSelect,
     });
-    return mapUserToUserResponseDto(updatedUser);
+    return updatedUser
 };
 
 const createDefaultPassword = (name: string): string => {
@@ -62,7 +81,7 @@ const createDefaultPassword = (name: string): string => {
 };
 
 export const userService = {
-    getAllUsers,
+    getUsers,
     getUserById,
     createUser,
     updateUser,

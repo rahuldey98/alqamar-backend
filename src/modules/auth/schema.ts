@@ -6,3 +6,5 @@ export const loginSchema = z.object({
         password: z.string().min(6),
     }),
 });
+
+export type LoginRequestDto = z.infer<typeof loginSchema>["body"]

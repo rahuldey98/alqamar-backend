@@ -13,6 +13,8 @@ model User {
   email     String?
   password  String
   role      UserRole
+  gender    Gender?
+  age       Int?
   status    Status   @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -21,17 +23,24 @@ model User {
   enrollments   ClassStudent[] @relation("StudentEnrollments")
 }
 
+model Course {
+  id             Int     @id @default(autoincrement())
+  title          String
+  enTitle        String?
+  durationMonths Int
+  status         Status  @default(ACTIVE)
+  classes        Class[]
+}
+
 model Class {
-  id          Int          @id @default(autoincrement())
-  name        String
-  subject     ClassSubject
-  teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
+  id          Int      @id @default(autoincrement())
+  courseId    Int
+  course      Course   @relation(fields: [courseId], references: [id])
   teacherId   Int
+  teacher     User     @relation("TeacherClasses", fields: [teacherId], references: [id])
   meetLink    String?
-  description String?
-  status      Status       @default(ACTIVE)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  status      Status   @default(ACTIVE)
+  startDate   DateTime @default(now())
 
   schedules ClassSchedule[]
   students  ClassStudent[]
@@ -39,21 +48,20 @@ model Class {
 
 model ClassSchedule {
   id        Int       @id @default(autoincrement())
-  class     Class     @relation(fields: [classId], references: [id])
   classId   Int
+  class     Class     @relation(fields: [classId], references: [id])
   dayOfWeek DayOfWeek
-  startTime DateTime
-  endTime   DateTime
+  startTime String
+  endTime   String
   status    Status    @default(ACTIVE)
 }
 
 model ClassStudent {
-  id        Int   @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   classId   Int
-  class     Class @relation(fields: [classId], references: [id])
+  class     Class    @relation(fields: [classId], references: [id])
   studentId Int
-  user      User? @relation("StudentEnrollments", fields: [userId], references: [id])
-  userId    Int?
+  student   User     @relation("StudentEnrollments", fields: [studentId], references: [id])
 
   @@unique([classId, studentId])
 }
@@ -68,11 +76,6 @@ enum DayOfWeek {
   SUNDAY
 }
 
-enum ClassSubject {
-  ARABIC
-  URDU
-}
-
 enum UserRole {
   ADMIN
   TEACHER
@@ -82,4 +85,9 @@ enum UserRole {
 enum Status {
   ACTIVE
   INACTIVE
+}
+
+enum Gender {
+  MALE
+  FEMALE
 }

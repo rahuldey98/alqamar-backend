@@ -1,13 +1,12 @@
-import {LoginRequestDto, LoginResponseDto} from "@rahuldey98/alqamar-models";
 import {generateToken} from "../../utils/jwt";
 import {verifyPassword} from "../../utils/password";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
-import {mapUserToUserResponseDto} from "../users/mapper";
+import {LoginRequestDto} from "./schema";
 
-const login = async (user: LoginRequestDto): Promise<LoginResponseDto> => {
+const login = async (user: LoginRequestDto) => {
     const dbUser = await prisma.user.findUnique({
-        where: {phone: user.phone},
+        where: {phone: user.phone}
     });
 
     if (!dbUser) {
@@ -21,8 +20,9 @@ const login = async (user: LoginRequestDto): Promise<LoginResponseDto> => {
     }
 
     const accessToken = generateToken({userId: dbUser.id.toString(), role: dbUser.role});
+    const {password, ...restUser} = dbUser;
     return {
-        user: mapUserToUserResponseDto(dbUser),
+        user: restUser,
         accessToken,
     };
 };

@@ -18,7 +18,6 @@
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.6.0",
     "@prisma/client": "^7.6.0",
-    "@rahuldey98/alqamar-models": "^1.0.5",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",

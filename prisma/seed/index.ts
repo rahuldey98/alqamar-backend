@@ -1,11 +1,16 @@
 import "dotenv/config";
 import {prisma} from "../../src/db/prisma";
+// @ts-ignore
 import {seedUsers} from "./user.seed";
+// @ts-ignore
 import {seedClasses} from "./class.seed";
+// @ts-ignore
+import {seedCourses} from "./course.seed";
 
 export const index = async (): Promise<void> => {
     const users = await seedUsers(prisma);
-    await seedClasses(prisma, users);
+    await seedCourses(prisma)
+    await seedClasses(prisma);
 
     console.log("Seeded users, classes, and enrollments successfully.");
     console.log(`Admin login: ${users.admin.phone} / admin123`);
