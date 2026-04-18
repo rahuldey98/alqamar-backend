@@ -134,7 +134,8 @@ const getHomeClasses = async (userId: number, role: UserRole) => {
                 return {
                     ...schedule,
                     course: cls.course,
-                    teacherName: cls.teacher.name
+                    teacherName: cls.teacher.name,
+                    meetLink: cls.meetLink,
                 };
             })
         )
