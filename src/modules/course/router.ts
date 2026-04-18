@@ -1,14 +1,27 @@
 import {Router} from "express";
+import {UserRole} from "@prisma/client";
 import {createCourse, getCourses, updateCourse} from "./controller";
+import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
 import {createCourseSchema, updateCourseSchema} from "./schema";
-import {updateUserSchema} from "../users/schema";
 
 const router = Router()
 
-router.post("/", validateRequest(createCourseSchema), createCourse)
+router.post("/",
+    requireAuth,
+    requireRole(UserRole.ADMIN),
+    validateRequest(createCourseSchema),
+    createCourse
+)
+
 router.get("/", getCourses)
-router.patch("/:id", validateRequest(updateCourseSchema), updateCourse)
+
+router.patch("/:id",
+    requireAuth,
+    requireRole(UserRole.ADMIN),
+    validateRequest(updateCourseSchema),
+    updateCourse
+)
 
 
 export default router

@@ -24,4 +24,3 @@ export const updateUserSchema = z.object({
 });
 
 export type UserRequestDto = z.infer<typeof userBodySchema>
-

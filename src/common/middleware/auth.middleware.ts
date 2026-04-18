@@ -1,9 +1,10 @@
 import type {NextFunction, Response} from "express";
+import type {UserRole} from "@prisma/client";
 import {verifyToken} from "../../utils/jwt";
 import {AppError} from "../app-error";
 import type {AuthRequest} from "../auth-request";
 
-export const authUser = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
     const authHeader = req?.headers?.authorization;
     if (!authHeader) {
         throw new AppError("No authorization header provided", 401);
@@ -15,4 +16,20 @@ export const authUser = (req: AuthRequest, res: Response, next: NextFunction) =>
 
     req.user = verifyToken(token);
     next();
+};
+
+export const requireRole = (...allowedRoles: UserRole[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        const currentUserRole = req.user?.role;
+
+        if (!req.user || !currentUserRole) {
+            throw new AppError("Unauthorized", 401);
+        }
+
+        if (!allowedRoles.includes(currentUserRole)) {
+            throw new AppError("Forbidden: insufficient role permissions", 403);
+        }
+
+        next();
+    };
 };
