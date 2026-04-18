@@ -13,7 +13,7 @@ const classSchema = z.object({
     courseId: z.number(),
     teacherId: z.number(),
     studentIds: z.array(number()).min(1),
-    meetingLink: z.string().nullable().optional(),
+    meetLink: z.string().nullable().optional(),
     schedules: z.array(classScheduleSchema).min(1)
 })
 

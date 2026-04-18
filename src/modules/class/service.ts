@@ -9,7 +9,7 @@ const createClasses = async (data: ClassesRequestDto) => {
         data: {
             courseId: data.courseId,
             teacherId: data.teacherId,
-            meetLink: data.meetingLink,
+            meetLink: data.meetLink,
             schedules: {
                 create: data.schedules.map(schedule => ({
                     dayOfWeek: schedule.dayOfWeek,
@@ -68,7 +68,7 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
         data: {
             courseId: data.courseId,
             teacherId: data.teacherId,
-            meetLink: data.meetingLink,
+            meetLink: data.meetLink,
 
             schedules: data.schedules ? {
                 deleteMany: {},
