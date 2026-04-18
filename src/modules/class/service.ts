@@ -96,6 +96,13 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
 
 const getHomeClasses = async (userId: number, role: UserRole) => {
     const today: DayOfWeek = dayMap[new Date().getDay()];
+    console.log({
+        now: new Date().toISOString(),
+        serverDayIndex: new Date().getDay(),
+        today,
+        userId,
+        role,
+    });
 
     const classes = await prisma.class.findMany({
         where: {
