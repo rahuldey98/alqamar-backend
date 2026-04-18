@@ -3,30 +3,20 @@ import type {Prisma} from "@prisma/client";
 import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
 import {UserRequestDto} from "./schema";
+import {publicUserSelect} from "../../common/public-user";
 
-const userSelect = {
-    id: true,
-    name: true,
-    phone: true,
-    email: true,
-    role: true,
-    gender: true,
-    age: true,
-    status: true,
-    createdAt: true,
-    updatedAt: true,
-} satisfies Prisma.UserSelect;
+
 
 const getUsers = async () => {
     return prisma.user.findMany({
-        select: userSelect,
+        select: publicUserSelect,
     });
 };
 
 const getUserById = async (id: string) => {
     const dbUser = await prisma.user.findUnique({
         where: {id: parseInt(id)},
-        select: userSelect,
+        select: publicUserSelect,
     });
     if (!dbUser) {
         throw new AppError("No user found", 400);
@@ -49,7 +39,7 @@ const createUser = async (user: UserRequestDto) => {
             gender: user.gender,
             age: user.age,
         },
-        select: userSelect,
+        select: publicUserSelect,
     });
 };
 
@@ -63,7 +53,7 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
     return prisma.user.update({
         where: {id: parseInt(id)},
         data: updateData,
-        select: userSelect,
+        select: publicUserSelect,
     });
 };
 
