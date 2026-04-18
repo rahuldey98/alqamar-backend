@@ -12,7 +12,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/classes", classRoutes);
-app.use("/course", courseRoutes);
+app.use("/courses", courseRoutes);
 
 app.use(errorHandler);
 

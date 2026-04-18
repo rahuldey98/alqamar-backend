@@ -1,11 +1,22 @@
 import type {NextFunction, Request, Response} from "express";
 import {sendResponse} from "../../common/send-response";
 import {UserService} from "./service";
+import {getStudentsQuerySchema} from "./schema";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const users = await UserService.getUsers();
         sendResponse(res, users);
+    } catch (e) {
+        next(e);
+    }
+};
+
+export const getStudents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {limit} = getStudentsQuerySchema.parse(req.query);
+        const students = await UserService.getStudents(limit);
+        sendResponse(res, students);
     } catch (e) {
         next(e);
     }

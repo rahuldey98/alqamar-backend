@@ -23,4 +23,12 @@ export const updateUserSchema = z.object({
     }),
 });
 
+export const getStudentsQuerySchema = z.object({
+    limit: z.coerce.number().int().positive().max(100).default(10),
+});
+
+export const getStudentsSchema = z.object({
+    query: getStudentsQuerySchema,
+});
+
 export type UserRequestDto = z.infer<typeof userBodySchema>

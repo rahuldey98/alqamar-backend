@@ -1,5 +1,5 @@
 import {prisma} from "../../db/prisma";
-import type {Prisma} from "@prisma/client";
+import {UserRole} from "@prisma/client";
 import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
 import {UserRequestDto} from "./schema";
@@ -9,6 +9,19 @@ import {publicUserSelect} from "../../common/public-user";
 
 const getUsers = async () => {
     return prisma.user.findMany({
+        select: publicUserSelect,
+    });
+};
+
+const getStudents = async (limit: number) => {
+    return prisma.user.findMany({
+        where: {
+            role: UserRole.STUDENT,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+        take: limit,
         select: publicUserSelect,
     });
 };
@@ -64,6 +77,7 @@ const createDefaultPassword = (name: string): string => {
 
 export const UserService = {
     getUsers,
+    getStudents,
     getUserById,
     createUser,
     updateUser,
