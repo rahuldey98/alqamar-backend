@@ -54,25 +54,17 @@ const createUser = async (user: UserRequestDto) => {
 };
 
 const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
-    const updateData: Prisma.UserUpdateInput = {};
-
-    if (user.name !== undefined) updateData.name = user.name;
-    if (user.phone !== undefined) updateData.phone = user.phone;
-    if (user.email !== undefined) updateData.email = user.email;
-    if (user.role !== undefined) updateData.role = user.role;
-    if (user.status !== undefined) updateData.status = user.status;
-    if (user.gender !== undefined) updateData.gender = user.gender;
-    if (user.age !== undefined) updateData.age = user.age;
-    if (user.password !== undefined) {
-        updateData.password = await hashPassword(user.password);
+    const {password, ...otherData} = user
+    const updateData = {
+        ...otherData,
+        ...(password && {password: await hashPassword(password)})
     }
 
-    const updatedUser = await prisma.user.update({
+    return prisma.user.update({
         where: {id: parseInt(id)},
         data: updateData,
         select: userSelect,
     });
-    return updatedUser
 };
 
 const createDefaultPassword = (name: string): string => {
@@ -80,7 +72,7 @@ const createDefaultPassword = (name: string): string => {
     return `${base || "user"}123`;
 };
 
-export const userService = {
+export const UserService = {
     getUsers,
     getUserById,
     createUser,

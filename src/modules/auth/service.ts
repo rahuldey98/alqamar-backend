@@ -27,6 +27,6 @@ const login = async (user: LoginRequestDto) => {
     };
 };
 
-export const authService = {
+export const AuthService = {
     login,
 };
