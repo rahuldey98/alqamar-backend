@@ -2,7 +2,6 @@ import {DayOfWeek, Status, UserRole} from "@prisma/client";
 import {ClassesRequestDto} from "./schema";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
-import {dayMap} from "../../utils/day-map";
 import {publicUserSelect} from "../../common/public-user";
 
 const createClasses = async (data: ClassesRequestDto) => {
@@ -94,15 +93,17 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
     })
 }
 
+const getCurrentDayOfWeek = (): DayOfWeek => {
+    const dayName = new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        timeZone: "Asia/Kolkata",
+    }).format(new Date()).toUpperCase();
+
+    return DayOfWeek[dayName as keyof typeof DayOfWeek];
+};
+
 const getHomeClasses = async (userId: number, role: UserRole) => {
-    const today: DayOfWeek = dayMap[new Date().getDay()];
-    console.log({
-        now: new Date().toISOString(),
-        serverDayIndex: new Date().getDay(),
-        today,
-        userId,
-        role,
-    });
+    const today = getCurrentDayOfWeek();
 
     const classes = await prisma.class.findMany({
         where: {
