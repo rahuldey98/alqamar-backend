@@ -39,10 +39,19 @@ export const getClassesById = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const getHomeClasses = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getTodayClasses = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const classes = await ClassService.getHomeClasses(Number(req.user!.userId), req.user!.role)
+        const classes = await ClassService.getTodayClasses(Number(req.user!.userId), req.user!.role)
         sendResponse(res, classes)
+    } catch (e) {
+        next(e)
+    }
+}
+
+export const getSchedules = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const schedules = await ClassService.getSchedules(Number(req.user!.userId), req.user!.role)
+        sendResponse(res, schedules)
     } catch (e) {
         next(e)
     }

@@ -1,6 +1,6 @@
 import {Router} from "express";
 import {UserRole} from "@prisma/client";
-import {createClasses, getClasses, getClassesById, getHomeClasses, updateClasses} from "./controller";
+import {createClasses, getClasses, getClassesById, getSchedules, getTodayClasses, updateClasses} from "./controller";
 import {validateRequest} from "../../common/middleware/validate.middleware";
 import {createClassesSchema, updateClassesSchema} from "./schema";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
@@ -17,9 +17,14 @@ router.post("/",
 
 router.get("/", getClasses)
 
-router.get("/home",
+router.get("/today",
     requireRole(UserRole.TEACHER, UserRole.STUDENT),
-    getHomeClasses
+    getTodayClasses
+)
+
+router.get("/schedules",
+    requireRole(UserRole.TEACHER, UserRole.STUDENT),
+    getSchedules
 )
 
 router.patch("/:id",

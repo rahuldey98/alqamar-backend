@@ -102,7 +102,52 @@ const getCurrentDayOfWeek = (): DayOfWeek => {
     return DayOfWeek[dayName as keyof typeof DayOfWeek];
 };
 
-const getHomeClasses = async (userId: number, role: UserRole) => {
+const getSchedules = async (userId: number, role: UserRole) => {
+    const classes = await prisma.class.findMany({
+        where: {
+            status: Status.ACTIVE,
+            ...(role === UserRole.TEACHER
+                ? {teacherId: userId}
+                : {students: {some: {studentId: userId}}})
+        },
+        include: {
+            course: true,
+            teacher: {
+                select: publicUserSelect
+            },
+            schedules: {
+                where: {
+                    status: Status.ACTIVE
+                }
+            }
+        }
+    });
+
+    const allSchedules = classes.flatMap(({schedules, ...cls}) =>
+        schedules.map(schedule => ({
+                ...schedule,
+                classId: cls.id,
+                course: cls.course,
+                teacherName: cls.teacher.name,
+                meetLink: cls.meetLink,
+            })
+        )
+    )
+
+    const groupedScheduleMap = new Map<DayOfWeek, typeof allSchedules>();
+    for (const schedule of allSchedules) {
+        const group = groupedScheduleMap.get(schedule.dayOfWeek) ?? []
+        group.push(schedule)
+        groupedScheduleMap.set(schedule.dayOfWeek, group)
+    }
+
+    return Array.from(groupedScheduleMap, ([dayOfWeek, schedules]) => ({
+        dayOfWeek,
+        schedules
+    }))
+}
+
+const getTodayClasses = async (userId: number, role: UserRole) => {
     const today = getCurrentDayOfWeek();
 
     const classes = await prisma.class.findMany({
@@ -157,5 +202,6 @@ export const ClassService = {
     getClasses,
     updateClasses,
     getClassesById,
-    getHomeClasses
+    getSchedules,
+    getTodayClasses
 }
