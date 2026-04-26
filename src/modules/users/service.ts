@@ -6,7 +6,6 @@ import {UserRequestDto} from "./schema";
 import {publicUserSelect} from "../../common/public-user";
 
 
-
 const getUsers = async () => {
     return prisma.user.findMany({
         select: publicUserSelect,
@@ -19,7 +18,7 @@ const getStudents = async (limit: number) => {
             role: UserRole.STUDENT,
         },
         orderBy: {
-            createdAt: "desc",
+            name: "asc",
         },
         take: limit,
         select: publicUserSelect,
