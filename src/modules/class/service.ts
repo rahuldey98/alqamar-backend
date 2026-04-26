@@ -115,6 +115,13 @@ const getSchedules = async (userId: number, role: UserRole) => {
             teacher: {
                 select: publicUserSelect
             },
+            students: {
+                include: {
+                    student: {
+                        select: publicUserSelect
+                    }
+                }
+            },
             schedules: {
                 where: {
                     status: Status.ACTIVE
@@ -129,6 +136,7 @@ const getSchedules = async (userId: number, role: UserRole) => {
                 classId: cls.id,
                 course: cls.course,
                 teacherName: cls.teacher.name,
+            studentNames: cls.students.map((student) => student.student.name),
                 meetLink: cls.meetLink,
             })
         )
@@ -188,6 +196,7 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
                     ...schedule,
                     course: cls.course,
                     teacherName: cls.teacher.name,
+                    studentNames: cls.students.map((student) => student.student.name),
                     meetLink: cls.meetLink,
                 };
             })
