@@ -9,7 +9,8 @@ const userBodySchema = z.object({
     email: z.string().optional(),
     status: z.enum(Status).optional(),
     gender: z.enum(Gender).optional(),
-    age: z.number().optional()
+    age: z.number().optional(),
+    meetLink: z.string().optional(),
 })
 
 export const createUserSchema = z.object({

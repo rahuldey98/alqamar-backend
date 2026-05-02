@@ -42,6 +42,7 @@ const getClasses = (userId: number, role: UserRole) => {
     return prisma.class.findMany({
         where,
         include: {
+            teacher: true,
             students: true,
             schedules: true
         }
@@ -52,6 +53,7 @@ const getClassesById = async (id: number) => {
     const classes = await prisma.class.findUnique({
         where: {id: id},
         include: {
+            teacher: true,
             schedules: true,
             students: true
         }
@@ -137,7 +139,7 @@ const getSchedules = async (userId: number, role: UserRole) => {
                 course: cls.course,
                 teacherName: cls.teacher.name,
             studentNames: cls.students.map((student) => student.student.name),
-                meetLink: cls.meetLink,
+            meetLink: cls.teacher.meetLink
             })
         )
     )
@@ -197,7 +199,7 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
                     course: cls.course,
                     teacherName: cls.teacher.name,
                     studentNames: cls.students.map((student) => student.student.name),
-                    meetLink: cls.meetLink,
+                    meetLink: cls.teacher.meetLink
                 };
             })
         )

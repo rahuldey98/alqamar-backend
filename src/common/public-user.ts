@@ -5,6 +5,7 @@ export const publicUserSelect = {
     name: true,
     phone: true,
     email: true,
+    meetLink: true,
     role: true,
     gender: true,
     age: true,

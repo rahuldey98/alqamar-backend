@@ -4,8 +4,6 @@ import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
 import {UserRequestDto} from "./schema";
 import {publicUserSelect} from "../../common/public-user";
-import {UpdateUserRequestDto} from "@rahuldey98/alqamar-models/dist/users/update-user";
-
 
 const getUsers = async () => {
     return prisma.user.findMany({
@@ -74,8 +72,22 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
     });
 };
 
-const updateCurrentUser = async (userId: string, user: UpdateUserRequestDto) => {
-    await getUserById(userId);
+const updateCurrentUser = async (userId: string, user: Partial<UserRequestDto>) => {
+    const dbUser = await prisma.user.findUnique({
+        where: {id: parseInt(userId)},
+        select: {
+            id: true,
+            role: true,
+        },
+    });
+
+    if (!dbUser) {
+        throw new AppError("No user found", 400);
+    }
+
+    if ("meetLink" in user && dbUser.role !== UserRole.TEACHER) {
+        throw new AppError("Only teachers can update meet link", 403);
+    }
 
     return prisma.user.update({
         where: {id: parseInt(userId)},
