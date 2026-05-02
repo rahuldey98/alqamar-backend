@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {UserRole, Status, Gender} from "@prisma/client";
+import {Gender, Status, UserRole} from "@prisma/client";
 
 const userBodySchema = z.object({
     name: z.string(),
@@ -21,6 +21,10 @@ export const updateUserSchema = z.object({
     params: z.object({
         id: z.string(),
     }),
+});
+
+export const updateCurrentUserSchema = z.object({
+    body: userBodySchema.partial(),
 });
 
 export const getStudentsQuerySchema = z.object({

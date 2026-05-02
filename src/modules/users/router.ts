@@ -2,8 +2,8 @@ import {Router} from "express";
 import {UserRole} from "@prisma/client";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
-import {getStudents, getUser, getUsers, patchUser, postUser} from "./controller";
-import {createUserSchema, getStudentsSchema, updateUserSchema} from "./schema";
+import {getCurrentUser, getStudents, getUser, getUsers, patchCurrentUser, patchUser, postUser} from "./controller";
+import {createUserSchema, getStudentsSchema, updateCurrentUserSchema, updateUserSchema} from "./schema";
 
 const router = Router();
 
@@ -19,6 +19,8 @@ router.get("/students",
     getStudents
 );
 
+router.get("/me", getCurrentUser);
+
 router.get("/:id", getUser);
 
 router.post("/",
@@ -26,6 +28,12 @@ router.post("/",
     validateRequest(createUserSchema),
     postUser
 );
+
+router.patch("/me",
+    validateRequest(updateCurrentUserSchema),
+    patchCurrentUser
+);
+
 router.patch("/:id",
     requireRole(UserRole.ADMIN),
     validateRequest(updateUserSchema),

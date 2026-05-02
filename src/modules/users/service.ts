@@ -4,6 +4,7 @@ import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
 import {UserRequestDto} from "./schema";
 import {publicUserSelect} from "../../common/public-user";
+import {UpdateUserRequestDto} from "@rahuldey98/alqamar-models/dist/users/update-user";
 
 
 const getUsers = async () => {
@@ -34,6 +35,10 @@ const getUserById = async (id: string) => {
         throw new AppError("No user found", 400);
     }
     return dbUser
+};
+
+const getCurrentUser = async (userId: string) => {
+    return getUserById(userId);
 };
 
 const createUser = async (user: UserRequestDto) => {
@@ -69,6 +74,16 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
     });
 };
 
+const updateCurrentUser = async (userId: string, user: UpdateUserRequestDto) => {
+    await getUserById(userId);
+
+    return prisma.user.update({
+        where: {id: parseInt(userId)},
+        data: user,
+        select: publicUserSelect,
+    });
+};
+
 const createDefaultPassword = (name: string): string => {
     const base = name.trim().toLowerCase().replace(/\s+/g, "").slice(0, 4);
     return `${base || "user"}123`;
@@ -78,6 +93,8 @@ export const UserService = {
     getUsers,
     getStudents,
     getUserById,
+    getCurrentUser,
     createUser,
+    updateCurrentUser,
     updateUser,
 };
