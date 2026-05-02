@@ -21,6 +21,8 @@ model User {
 
   taughtClasses Class[]        @relation("TeacherClasses")
   enrollments   ClassStudent[] @relation("StudentEnrollments")
+  teacherAttendances TeacherAttendance[]
+  studentAttendances StudentAttendance[]
 }
 
 model Course {
@@ -45,6 +47,8 @@ model Class {
 
   schedules ClassSchedule[]
   students  ClassStudent[]
+  teacherAttendances TeacherAttendance[]
+  studentAttendances StudentAttendance[]
 }
 
 model ClassSchedule {
@@ -65,6 +69,30 @@ model ClassStudent {
   student   User     @relation("StudentEnrollments", fields: [studentId], references: [id])
 
   @@unique([classId, studentId])
+}
+
+model TeacherAttendance {
+  id        Int      @id @default(autoincrement())
+  classId   Int
+  class     Class    @relation(fields: [classId], references: [id])
+  teacherId Int
+  teacher   User     @relation(fields: [teacherId], references: [id])
+  date      String
+  createdAt DateTime @default(now())
+
+  @@unique([classId, teacherId, date])
+}
+
+model StudentAttendance {
+  id        Int      @id @default(autoincrement())
+  classId   Int
+  class     Class    @relation(fields: [classId], references: [id])
+  studentId Int
+  student   User     @relation(fields: [studentId], references: [id])
+  date      String
+  createdAt DateTime @default(now())
+
+  @@unique([classId, studentId, date])
 }
 
 enum DayOfWeek {
