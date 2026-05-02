@@ -11,7 +11,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.post("/",
+router.post("/mark",
     requireRole(UserRole.TEACHER, UserRole.STUDENT),
     validateRequest(markAttendanceSchema),
     postAttendance,
