@@ -2,7 +2,7 @@ import type {NextFunction, Request, Response} from "express";
 import type {AuthRequest} from "../../common/auth-request";
 import {sendResponse} from "../../common/send-response";
 import {UserService} from "./service";
-import {getStudentsQuerySchema} from "./schema";
+import {getUsersQuerySchema} from "./schema";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -15,9 +15,19 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 
 export const getStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {limit} = getStudentsQuerySchema.parse(req.query);
+        const {limit} = getUsersQuerySchema.parse(req.query);
         const students = await UserService.getStudents(limit);
         sendResponse(res, students);
+    } catch (e) {
+        next(e);
+    }
+};
+
+export const getTeachers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {limit} = getUsersQuerySchema.parse(req.query);
+        const teachers = await UserService.getTeachers(limit);
+        sendResponse(res, teachers);
     } catch (e) {
         next(e);
     }

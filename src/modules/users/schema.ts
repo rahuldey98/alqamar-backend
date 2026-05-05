@@ -28,12 +28,12 @@ export const updateCurrentUserSchema = z.object({
     body: userBodySchema.partial(),
 });
 
-export const getStudentsQuerySchema = z.object({
+export const getUsersQuerySchema = z.object({
     limit: z.coerce.number().int().positive().max(100).default(10),
 });
 
-export const getStudentsSchema = z.object({
-    query: getStudentsQuerySchema,
+export const getUsersQueryRequestSchema = z.object({
+    query: getUsersQuerySchema,
 });
 
 export type UserRequestDto = z.infer<typeof userBodySchema>

@@ -24,6 +24,19 @@ const getStudents = async (limit: number) => {
     });
 };
 
+const getTeachers = async (limit: number) => {
+    return prisma.user.findMany({
+        where: {
+            role: UserRole.TEACHER,
+        },
+        orderBy: {
+            name: "asc",
+        },
+        take: limit,
+        select: publicUserSelect,
+    });
+};
+
 const getUserById = async (id: string) => {
     const dbUser = await prisma.user.findUnique({
         where: {id: parseInt(id)},
@@ -104,6 +117,7 @@ const createDefaultPassword = (name: string): string => {
 export const UserService = {
     getUsers,
     getStudents,
+    getTeachers,
     getUserById,
     getCurrentUser,
     createUser,

@@ -2,8 +2,8 @@ import {Router} from "express";
 import {UserRole} from "@prisma/client";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
-import {getCurrentUser, getStudents, getUser, getUsers, patchCurrentUser, patchUser, postUser} from "./controller";
-import {createUserSchema, getStudentsSchema, updateCurrentUserSchema, updateUserSchema} from "./schema";
+import {getCurrentUser, getStudents, getTeachers, getUser, getUsers, patchCurrentUser, patchUser, postUser} from "./controller";
+import {createUserSchema, getUsersQueryRequestSchema, updateCurrentUserSchema, updateUserSchema} from "./schema";
 
 const router = Router();
 
@@ -15,8 +15,13 @@ router.get("/",
 )
 
 router.get("/students",
-    validateRequest(getStudentsSchema),
+    validateRequest(getUsersQueryRequestSchema),
     getStudents
+);
+
+router.get("/teachers",
+    validateRequest(getUsersQueryRequestSchema),
+    getTeachers
 );
 
 router.get("/me", getCurrentUser);
