@@ -4,6 +4,7 @@ import userRoutes from "./modules/users/router";
 import classRoutes from "./modules/class/router"
 import courseRoutes from "./modules/course/router"
 import attendanceRoutes from "./modules/attendance/router"
+import dashboardRoutes from "./modules/dashboard/router"
 import {errorHandler} from "./common/error-handler";
 import {allowAccessControl} from "./common/middleware/cors.middleware";
 
@@ -17,6 +18,7 @@ app.use("/users", userRoutes);
 app.use("/classes", classRoutes);
 app.use("/courses", courseRoutes);
 app.use("/attendance", attendanceRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.use(errorHandler);
 

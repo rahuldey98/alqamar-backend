@@ -3,6 +3,7 @@ import {ClassesRequestDto} from "./schema";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
 import {publicUserSelect} from "../../common/public-user";
+import {getCurrentDayOfWeek} from "../../utils/date";
 
 const createClasses = async (data: ClassesRequestDto) => {
     return prisma.class.create({
@@ -94,15 +95,6 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
         }
     })
 }
-
-const getCurrentDayOfWeek = (): DayOfWeek => {
-    const dayName = new Intl.DateTimeFormat("en-US", {
-        weekday: "long",
-        timeZone: "Asia/Kolkata",
-    }).format(new Date()).toUpperCase();
-
-    return DayOfWeek[dayName as keyof typeof DayOfWeek];
-};
 
 const getSchedules = async (userId: number, role: UserRole) => {
     const classes = await prisma.class.findMany({
