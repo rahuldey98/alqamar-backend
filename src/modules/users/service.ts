@@ -1,5 +1,5 @@
 import {prisma} from "../../db/prisma";
-import {UserRole} from "@prisma/client";
+import {Status, UserRole} from "@prisma/client";
 import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
 import {UserRequestDto} from "./schema";
@@ -20,7 +20,24 @@ const getStudents = async (limit: number) => {
             name: "asc",
         },
         take: limit,
-        select: publicUserSelect,
+        select: {
+            ...publicUserSelect,
+            enrollments: {
+                select: {
+                    class: {
+                        select: {
+                            id: true,
+                            meetLink: true,
+                            status: true,
+                            startDate: true,
+                            course: {
+                                select: {id: true, title: true, enTitle: true},
+                            }
+                        },
+                    },
+                },
+            },
+        },
     });
 };
 
