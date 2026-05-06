@@ -9,7 +9,7 @@ const createClasses = async (data: ClassesRequestDto) => {
     return prisma.class.create({
         data: {
             courseId: data.courseId,
-            teacherId: data.teacherId,
+            teacherId: Number(data.teacherId),
             meetLink: data.meetLink,
             schedules: {
                 create: data.schedules.map(schedule => ({
@@ -70,7 +70,7 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
         where: {id: id},
         data: {
             courseId: data.courseId,
-            teacherId: data.teacherId,
+            teacherId: Number(data.teacherId),
             meetLink: data.meetLink,
 
             schedules: data.schedules ? {
