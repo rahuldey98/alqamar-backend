@@ -83,6 +83,8 @@ const createUser = async (user: UserRequestDto) => {
             status: user.status,
             gender: user.gender,
             age: user.age,
+            feesDate: user.feesDate,
+            courseId: user.courseId,
         },
         select: publicUserSelect,
     });

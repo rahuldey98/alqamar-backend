@@ -17,6 +17,9 @@ model User {
   gender    Gender?
   age       Int?
   status    Status   @default(ACTIVE)
+  feesDate  DateTime?
+  courseId  Int?
+  course    Course?  @relation(fields: [courseId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -33,6 +36,7 @@ model Course {
   durationMonths Int
   status         Status  @default(ACTIVE)
   classes        Class[]
+  students       User[]
 }
 
 model Class {

@@ -11,6 +11,8 @@ const userBodySchema = z.object({
     gender: z.enum(Gender).optional(),
     age: z.number().optional(),
     meetLink: z.string().optional(),
+    feesDate: z.coerce.date().optional(),
+    courseId: z.number().int().positive().optional(),
 })
 
 export const createUserSchema = z.object({

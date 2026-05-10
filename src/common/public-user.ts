@@ -10,6 +10,10 @@ export const publicUserSelect = {
     gender: true,
     age: true,
     status: true,
+    feesDate: true,
+    course: {
+        select: {id: true, title: true, enTitle: true},
+    },
     createdAt: true,
     updatedAt: true,
 } satisfies Prisma.UserSelect;
