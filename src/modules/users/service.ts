@@ -14,7 +14,9 @@ const teacherSelect = {
 const studentSelect = {
     userId: true,
     feesDate: true,
+    courseId: true,
     course: {select: {id: true, title: true, enTitle: true}},
+    classId: true,
     class: {
         select: {
             id: true,
