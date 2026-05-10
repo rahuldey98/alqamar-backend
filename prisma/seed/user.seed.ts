@@ -1,4 +1,4 @@
-import {PrismaClient, Status, UserRole, type User} from "@prisma/client";
+import {PrismaClient, Status, type User, UserRole} from "@prisma/client";
 import {hashPassword} from "../../src/utils/password";
 
 export type SeedUsersResult = {
@@ -17,7 +17,7 @@ export const seedUsers = async (prisma: PrismaClient): Promise<SeedUsersResult> 
         update: {},
         create: {
             id: 1,
-            name: "Admin User",
+            name: "Rahul Dey",
             phone: "7992632090",
             email: "admin@alqamar.local",
             password: adminPassword,
@@ -31,7 +31,7 @@ export const seedUsers = async (prisma: PrismaClient): Promise<SeedUsersResult> 
         update: {},
         create: {
             id: 2,
-            name: "Teacher User",
+            name: "Teacher Test",
             phone: "9000000001",
             email: "teacher@alqamar.local",
             password: teacherPassword,
@@ -48,7 +48,7 @@ export const seedUsers = async (prisma: PrismaClient): Promise<SeedUsersResult> 
         update: {},
         create: {
             id: 3,
-            name: "Student User",
+            name: "Student Test",
             phone: "9000000002",
             email: "student@alqamar.local",
             password: studentPassword,
