@@ -7,6 +7,11 @@ import {seedClasses} from "./class.seed";
 // @ts-ignore
 import {seedCourses} from "./course.seed";
 
+if (process.env.NODE_ENV === "production") {
+    console.error("Refusing to seed: NODE_ENV=production. Seeds are dev-only.");
+    process.exit(1);
+}
+
 export const index = async (): Promise<void> => {
     const users = await seedUsers(prisma);
     await seedCourses(prisma)
