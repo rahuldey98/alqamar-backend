@@ -5,13 +5,13 @@ import {createDefaultPassword, hashPassword} from "../../utils/password";
 import {publicUserSelect} from "../../common/public-user";
 import {AdminRequestDto, StudentRequestDto, TeacherRequestDto, UserRequestDto} from "./schema";
 
-const publicTeacherSelect = {
+const teacherSelect = {
     userId: true,
     meetLink: true,
     user: {select: publicUserSelect},
 } satisfies Prisma.TeacherSelect;
 
-const publicStudentSelect = {
+const studentSelect = {
     userId: true,
     feesDate: true,
     course: {select: {id: true, title: true, enTitle: true}},
@@ -26,6 +26,19 @@ const publicStudentSelect = {
     },
     user: {select: publicUserSelect},
 } satisfies Prisma.StudentSelect;
+
+type RawTeacher = Prisma.TeacherGetPayload<{select: typeof teacherSelect}>;
+type RawStudent = Prisma.StudentGetPayload<{select: typeof studentSelect}>;
+
+const flattenTeacher = (t: RawTeacher) => {
+    const {user, userId, ...teacherFields} = t;
+    return {...user, ...teacherFields};
+};
+
+const flattenStudent = (s: RawStudent) => {
+    const {user, userId, ...studentFields} = s;
+    return {...user, ...studentFields};
+};
 
 const getUsers = async () => {
     return prisma.user.findMany({select: publicUserSelect});
@@ -106,7 +119,7 @@ const createTeacher = async (data: TeacherRequestDto) => {
     const plainPassword = data.password || createDefaultPassword(data.name);
     const hashedPassword = await hashPassword(plainPassword);
 
-    return prisma.user.create({
+    const created = await prisma.user.create({
         data: {
             name: data.name,
             phone: data.phone,
@@ -120,30 +133,29 @@ const createTeacher = async (data: TeacherRequestDto) => {
             meetLink: data.meetLink,
             teacher: {create: {meetLink: data.meetLink}},
         },
-        select: {
-            ...publicUserSelect,
-            teacher: {select: {userId: true, meetLink: true}},
-        },
+        select: {id: true},
     });
+    return getTeacherById(created.id.toString());
 };
 
 const getTeachers = async (limit: number) => {
-    return prisma.teacher.findMany({
+    const teachers = await prisma.teacher.findMany({
         orderBy: {user: {name: "asc"}},
         take: limit,
-        select: publicTeacherSelect,
+        select: teacherSelect,
     });
+    return teachers.map(flattenTeacher);
 };
 
 const getTeacherById = async (id: string) => {
     const teacher = await prisma.teacher.findUnique({
         where: {userId: parseInt(id)},
-        select: publicTeacherSelect,
+        select: teacherSelect,
     });
     if (!teacher) {
         throw new AppError("No teacher found", 400);
     }
-    return teacher;
+    return flattenTeacher(teacher);
 };
 
 const updateTeacher = async (id: string, data: Partial<TeacherRequestDto>) => {
@@ -165,21 +177,22 @@ const updateTeacher = async (id: string, data: Partial<TeacherRequestDto>) => {
         ...(meetLink !== undefined && {meetLink}),
     };
 
-    return prisma.teacher.update({
+    const teacher = await prisma.teacher.update({
         where: {userId: parseInt(id)},
         data: {
             ...teacherData,
             ...(Object.keys(userData).length > 0 && {user: {update: userData}}),
         },
-        select: publicTeacherSelect,
+        select: teacherSelect,
     });
+    return flattenTeacher(teacher);
 };
 
 const createStudent = async (data: StudentRequestDto) => {
     const plainPassword = data.password || createDefaultPassword(data.name);
     const hashedPassword = await hashPassword(plainPassword);
 
-    return prisma.user.create({
+    const created = await prisma.user.create({
         data: {
             name: data.name,
             phone: data.phone,
@@ -197,42 +210,29 @@ const createStudent = async (data: StudentRequestDto) => {
                 },
             },
         },
-        select: {
-            ...publicUserSelect,
-            student: {
-                select: {
-                    userId: true,
-                    feesDate: true,
-                    course: {select: {id: true, title: true, enTitle: true}},
-                    classId: true,
-                },
-            },
-        },
+        select: {id: true},
     });
+    return getStudentById(created.id.toString());
 };
 
 const getStudents = async (limit: number) => {
     const students = await prisma.student.findMany({
         orderBy: {user: {name: "asc"}},
         take: limit,
-        select: publicStudentSelect,
+        select: studentSelect,
     });
-    return students.map(student => ({
-        ...student,
-        name: student.user.name,
-        id: student.userId,
-    }));
+    return students.map(flattenStudent);
 };
 
 const getStudentById = async (id: string) => {
     const student = await prisma.student.findUnique({
         where: {userId: parseInt(id)},
-        select: publicStudentSelect,
+        select: studentSelect,
     });
     if (!student) {
         throw new AppError("No student found", 400);
     }
-    return student;
+    return flattenStudent(student);
 };
 
 const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
@@ -254,14 +254,15 @@ const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
         ...(classId !== undefined && {class: classId === null ? {disconnect: true} : {connect: {id: classId}}}),
     };
 
-    return prisma.student.update({
+    const student = await prisma.student.update({
         where: {userId: parseInt(id)},
         data: {
             ...studentData,
             ...(Object.keys(userData).length > 0 && {user: {update: userData}}),
         },
-        select: publicStudentSelect,
+        select: studentSelect,
     });
+    return flattenStudent(student);
 };
 
 export const UserService = {
