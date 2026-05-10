@@ -1,5 +1,5 @@
 import {prisma} from "../../db/prisma";
-import {Status, UserRole} from "@prisma/client";
+import {UserRole} from "@prisma/client";
 import {hashPassword} from "../../utils/password";
 import {AppError} from "../../common/app-error";
 import {UserRequestDto} from "./schema";
@@ -7,49 +7,6 @@ import {publicUserSelect} from "../../common/public-user";
 
 const getUsers = async () => {
     return prisma.user.findMany({
-        select: publicUserSelect,
-    });
-};
-
-const getStudents = async (limit: number) => {
-    return prisma.user.findMany({
-        where: {
-            role: UserRole.STUDENT,
-        },
-        orderBy: {
-            name: "asc",
-        },
-        take: limit,
-        select: {
-            ...publicUserSelect,
-            enrollments: {
-                select: {
-                    class: {
-                        select: {
-                            id: true,
-                            meetLink: true,
-                            status: true,
-                            startDate: true,
-                            course: {
-                                select: {id: true, title: true, enTitle: true},
-                            }
-                        },
-                    },
-                },
-            },
-        },
-    });
-};
-
-const getTeachers = async (limit: number) => {
-    return prisma.user.findMany({
-        where: {
-            role: UserRole.TEACHER,
-        },
-        orderBy: {
-            name: "asc",
-        },
-        take: limit,
         select: publicUserSelect,
     });
 };
@@ -69,33 +26,31 @@ const getCurrentUser = async (userId: string) => {
     return getUserById(userId);
 };
 
-const createUser = async (user: UserRequestDto) => {
-    const plainPassword = user.password || createDefaultPassword(user.name);
-    const hashedPassword = await hashPassword(plainPassword);
-
-    return prisma.user.create({
-        data: {
-            name: user.name,
-            phone: user.phone,
-            email: user.email,
-            password: hashedPassword,
-            role: user.role,
-            status: user.status,
-            gender: user.gender,
-            age: user.age,
-            feesDate: user.feesDate,
-            courseId: user.courseId,
-        },
-        select: publicUserSelect,
-    });
-};
-
 const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
-    const {password, ...otherData} = user
+    const {password, meetLink, ...otherData} = user;
+
+    if (meetLink !== undefined) {
+        const dbUser = await prisma.user.findUnique({
+            where: {id: parseInt(id)},
+            select: {role: true},
+        });
+        if (!dbUser) {
+            throw new AppError("No user found", 400);
+        }
+        if (dbUser.role !== UserRole.TEACHER) {
+            throw new AppError("Only teachers can update meet link", 403);
+        }
+    }
+
     const updateData = {
         ...otherData,
-        ...(password && {password: await hashPassword(password)})
-    }
+        ...(password && {password: await hashPassword(password)}),
+        // TODO: remove once clients write meetLink via PATCH /users/teachers/:id only
+        ...(meetLink !== undefined && {
+            meetLink,
+            teacher: {update: {meetLink}},
+        }),
+    };
 
     return prisma.user.update({
         where: {id: parseInt(id)},
@@ -105,41 +60,13 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
 };
 
 const updateCurrentUser = async (userId: string, user: Partial<UserRequestDto>) => {
-    const dbUser = await prisma.user.findUnique({
-        where: {id: parseInt(userId)},
-        select: {
-            id: true,
-            role: true,
-        },
-    });
-
-    if (!dbUser) {
-        throw new AppError("No user found", 400);
-    }
-
-    if ("meetLink" in user && dbUser.role !== UserRole.TEACHER) {
-        throw new AppError("Only teachers can update meet link", 403);
-    }
-
-    return prisma.user.update({
-        where: {id: parseInt(userId)},
-        data: user,
-        select: publicUserSelect,
-    });
-};
-
-const createDefaultPassword = (name: string): string => {
-    const base = name.trim().toLowerCase().replace(/\s+/g, "").slice(0, 4);
-    return `${base || "user"}123`;
+    return updateUser(userId, user);
 };
 
 export const UserService = {
     getUsers,
-    getStudents,
-    getTeachers,
     getUserById,
     getCurrentUser,
-    createUser,
     updateCurrentUser,
     updateUser,
 };

@@ -1,2 +1,0 @@
-ALTER TABLE `User`
-    ADD COLUMN `meetLink` VARCHAR(191) NULL;

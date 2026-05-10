@@ -11,49 +11,63 @@ model User {
   name      String
   phone     String   @unique
   email     String?
-  meetLink String?
   password  String
   role      UserRole
   gender    Gender?
   age       Int?
   status    Status   @default(ACTIVE)
-  feesDate  DateTime?
-  courseId  Int?
-  course    Course?  @relation(fields: [courseId], references: [id])
+  // TODO: remove User.meetLink once all clients read from Teacher.meetLink. Kept here as a backward-compatible mirror.
+  meetLink  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  taughtClasses Class[]        @relation("TeacherClasses")
-  enrollments   ClassStudent[] @relation("StudentEnrollments")
-  teacherAttendances TeacherAttendance[]
-  studentAttendances StudentAttendance[]
+  teacher     Teacher?
+  student     Student?
+  attendances Attendance[]
+}
+
+model Teacher {
+  userId   Int     @id
+  user     User    @relation(fields: [userId], references: [id])
+  meetLink String?
+
+  taughtClasses Class[] @relation("TeacherClasses")
+}
+
+model Student {
+  userId   Int       @id
+  user     User      @relation(fields: [userId], references: [id])
+  feesDate DateTime?
+  courseId Int?
+  course   Course?   @relation(fields: [courseId], references: [id])
+  classId  Int?
+  class    Class?    @relation("ClassStudents", fields: [classId], references: [id])
 }
 
 model Course {
-  id             Int     @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   title          String
   enTitle        String?
   durationMonths Int
-  status         Status  @default(ACTIVE)
+  status         Status    @default(ACTIVE)
   classes        Class[]
-  students       User[]
+  students       Student[]
 }
 
 model Class {
-  id          Int      @id @default(autoincrement())
-  courseId    Int
-  course      Course   @relation(fields: [courseId], references: [id])
-  teacherId   Int
-  teacher     User     @relation("TeacherClasses", fields: [teacherId], references: [id])
-  meetLink    String?
-  status      Status   @default(ACTIVE)
-  startDate   DateTime @default(now())
+  id        Int       @id @default(autoincrement())
+  courseId  Int
+  course    Course    @relation(fields: [courseId], references: [id])
+  teacherId Int
+  teacher   Teacher   @relation("TeacherClasses", fields: [teacherId], references: [userId])
+  meetLink  String?
+  status    Status    @default(ACTIVE)
+  startDate DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 
-  schedules ClassSchedule[]
-  students  ClassStudent[]
-  teacherAttendances TeacherAttendance[]
-  studentAttendances StudentAttendance[]
+  schedules   ClassSchedule[]
+  students    Student[]       @relation("ClassStudents")
+  attendances Attendance[]
 }
 
 model ClassSchedule {
@@ -66,38 +80,16 @@ model ClassSchedule {
   status    Status    @default(ACTIVE)
 }
 
-model ClassStudent {
+model Attendance {
   id        Int      @id @default(autoincrement())
   classId   Int
   class     Class    @relation(fields: [classId], references: [id])
-  studentId Int
-  student   User     @relation("StudentEnrollments", fields: [studentId], references: [id])
-
-  @@unique([classId, studentId])
-}
-
-model TeacherAttendance {
-  id        Int      @id @default(autoincrement())
-  classId   Int
-  class     Class    @relation(fields: [classId], references: [id])
-  teacherId Int
-  teacher   User     @relation(fields: [teacherId], references: [id])
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
   date      String
   createdAt DateTime @default(now())
 
-  @@unique([classId, teacherId, date])
-}
-
-model StudentAttendance {
-  id        Int      @id @default(autoincrement())
-  classId   Int
-  class     Class    @relation(fields: [classId], references: [id])
-  studentId Int
-  student   User     @relation(fields: [studentId], references: [id])
-  date      String
-  createdAt DateTime @default(now())
-
-  @@unique([classId, studentId, date])
+  @@unique([classId, userId, date])
 }
 
 enum DayOfWeek {

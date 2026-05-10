@@ -2,37 +2,26 @@ import {Router} from "express";
 import {UserRole} from "@prisma/client";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
-import {getCurrentUser, getStudents, getTeachers, getUser, getUsers, patchCurrentUser, patchUser, postUser} from "./controller";
-import {createUserSchema, getUsersQueryRequestSchema, updateCurrentUserSchema, updateUserSchema} from "./schema";
+import {getCurrentUser, getUser, getUsers, patchCurrentUser, patchUser} from "./controller";
+import {updateCurrentUserSchema, updateUserSchema} from "./schema";
+import teacherRoutes from "../teachers/router";
+import studentRoutes from "../students/router";
 
 const router = Router();
 
 router.use(requireAuth);
+
+router.use("/teachers", teacherRoutes);
+router.use("/students", studentRoutes);
 
 router.get("/",
     requireRole(UserRole.ADMIN),
     getUsers
 )
 
-router.get("/students",
-    validateRequest(getUsersQueryRequestSchema),
-    getStudents
-);
-
-router.get("/teachers",
-    validateRequest(getUsersQueryRequestSchema),
-    getTeachers
-);
-
 router.get("/me", getCurrentUser);
 
 router.get("/:id", getUser);
-
-router.post("/",
-    requireRole(UserRole.ADMIN),
-    validateRequest(createUserSchema),
-    postUser
-);
 
 router.patch("/me",
     validateRequest(updateCurrentUserSchema),

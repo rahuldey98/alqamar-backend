@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import authRoutes from "./modules/auth/router";
 import userRoutes from "./modules/users/router";
+import adminRoutes from "./modules/admins/router";
 import classRoutes from "./modules/class/router"
 import courseRoutes from "./modules/course/router"
 import attendanceRoutes from "./modules/attendance/router"
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use(allowAccessControl);
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/admins", adminRoutes);
 app.use("/classes", classRoutes);
 app.use("/courses", courseRoutes);
 app.use("/attendance", attendanceRoutes);

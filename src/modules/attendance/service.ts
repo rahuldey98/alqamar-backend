@@ -7,13 +7,11 @@ import {GetAttendanceRequest} from "@rahuldey98/alqamar-models/dist/attendance/g
 
 const markAttendance = async (userId: number, role: UserRole, data: MarkAttendanceRequest) => {
     const dbClass = await prisma.class.findUnique({
-        where: {
-            id: data.classId,
-        },
+        where: {id: data.classId},
         select: {
             id: true,
-            teacherId: true,
             status: true,
+            teacher: {select: {userId: true}},
         },
     });
 
@@ -22,63 +20,37 @@ const markAttendance = async (userId: number, role: UserRole, data: MarkAttendan
     }
 
     if (role === UserRole.TEACHER) {
-        if (dbClass.teacherId !== userId) {
+        if (dbClass.teacher.userId !== userId) {
             throw new AppError("Forbidden: you can only mark attendance for your own class", 403);
         }
-
-        const record = await prisma.teacherAttendance.upsert({
-            where: {
-                classId_teacherId_date: {
-                    classId: data.classId,
-                    teacherId: userId,
-                    date: data.date,
-                },
-            },
-            update: {},
-            create: {
-                classId: data.classId,
-                teacherId: userId,
-                date: data.date,
-            },
+    } else if (role === UserRole.STUDENT) {
+        const enrolled = await prisma.student.findFirst({
+            where: {userId, classId: data.classId},
         });
-
-        return {role, userId, ...record};
-    }
-
-    if (role === UserRole.STUDENT) {
-        const isEnrolled = await prisma.classStudent.findUnique({
-            where: {
-                classId_studentId: {
-                    classId: data.classId,
-                    studentId: userId,
-                },
-            },
-        });
-
-        if (!isEnrolled) {
+        if (!enrolled) {
             throw new AppError("Forbidden: you are not enrolled in this class", 403);
         }
-
-        const record = await prisma.studentAttendance.upsert({
-            where: {
-                classId_studentId_date: {
-                    classId: data.classId,
-                    studentId: userId,
-                    date: data.date,
-                },
-            },
-            update: {},
-            create: {
-                classId: data.classId,
-                studentId: userId,
-                date: data.date,
-            },
-        });
-
-        return {role, userId, ...record};
+    } else {
+        throw new AppError("Forbidden: insufficient role permissions", 403);
     }
 
-    throw new AppError("Forbidden: insufficient role permissions", 403);
+    const record = await prisma.attendance.upsert({
+        where: {
+            classId_userId_date: {
+                classId: data.classId,
+                userId,
+                date: data.date,
+            },
+        },
+        update: {},
+        create: {
+            classId: data.classId,
+            userId,
+            date: data.date,
+        },
+    });
+
+    return {role, ...record};
 };
 
 const buildDateFilter = (data: { fromDate?: string; toDate?: string }) => {
@@ -95,35 +67,24 @@ const buildDateFilter = (data: { fromDate?: string; toDate?: string }) => {
 const getAttendanceLog = async (userId: number, role: UserRole, data: GetAttendanceRequest) => {
     const dateFilter = buildDateFilter(data);
 
-    const attendanceModel = role === UserRole.TEACHER
-        ? prisma.teacherAttendance
-        : prisma.studentAttendance;
-
-    const whereClause: any = {
-        ...(dateFilter && {date: dateFilter}),
-        class: {status: Status.ACTIVE},
-    };
-
-    if (role === UserRole.TEACHER) {
-        whereClause.teacherId = userId;
-    } else {
-        whereClause.studentId = userId;
-    }
-
-    const attendances = await (attendanceModel as any).findMany({
-        where: whereClause,
+    const attendances = await prisma.attendance.findMany({
+        where: {
+            userId,
+            ...(dateFilter && {date: dateFilter}),
+            class: {status: Status.ACTIVE},
+        },
         include: {
             class: {
                 include: {
                     course: {select: {id: true, title: true}},
-                    teacher: {select: {id: true, name: true}},
+                    teacher: {include: {user: {select: {id: true, name: true}}}},
                 },
             },
         },
         orderBy: [{date: "desc"}, {classId: "asc"}],
     });
 
-    return attendances.map((record: any) => ({
+    return attendances.map(record => ({
         classId: record.classId,
         date: record.date,
         present: true,
@@ -132,8 +93,8 @@ const getAttendanceLog = async (userId: number, role: UserRole, data: GetAttenda
             courseTitle: record.class.course.title,
         },
         teacher: {
-            teacherId: record.class.teacher.id,
-            teacherName: record.class.teacher.name,
+            teacherId: record.class.teacher.user.id,
+            teacherName: record.class.teacher.user.name,
         },
     }));
 };

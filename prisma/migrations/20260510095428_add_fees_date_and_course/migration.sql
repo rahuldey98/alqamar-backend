@@ -1,6 +1,0 @@
--- AlterTable
-ALTER TABLE `User` ADD COLUMN `courseId` INTEGER NULL,
-    ADD COLUMN `feesDate` DATETIME(3) NULL;
-
--- AddForeignKey
-ALTER TABLE `User` ADD CONSTRAINT `User_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

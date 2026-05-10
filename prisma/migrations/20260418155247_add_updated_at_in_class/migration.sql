@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE `Class` ADD COLUMN `updatedAt` DATETIME(3) NULL;
-
--- AlterTable
-ALTER TABLE `ClassSchedule` MODIFY `dayOfWeek` ENUM('SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY') NOT NULL;

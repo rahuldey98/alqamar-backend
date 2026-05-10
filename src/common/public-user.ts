@@ -5,15 +5,12 @@ export const publicUserSelect = {
     name: true,
     phone: true,
     email: true,
-    meetLink: true,
     role: true,
     gender: true,
     age: true,
     status: true,
-    feesDate: true,
-    course: {
-        select: {id: true, title: true, enTitle: true},
-    },
+    // TODO: remove once all clients read meetLink from Teacher
+    meetLink: true,
     createdAt: true,
     updatedAt: true,
 } satisfies Prisma.UserSelect;

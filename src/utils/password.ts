@@ -12,3 +12,8 @@ export const verifyPassword = async (
 ): Promise<boolean> => {
     return bcrypt.compare(password, passwordHash);
 };
+
+export const createDefaultPassword = (name: string): string => {
+    const base = name.trim().toLowerCase().replace(/\s+/g, "").slice(0, 4);
+    return `${base || "user"}123`;
+};
