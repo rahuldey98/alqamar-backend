@@ -26,6 +26,7 @@ const studentSelect = {
             course: {select: {id: true, title: true, enTitle: true}},
         },
     },
+    teacherId: true,
     user: {select: publicUserSelect},
 } satisfies Prisma.StudentSelect;
 
@@ -209,6 +210,7 @@ const createStudent = async (data: StudentRequestDto) => {
                     feesDate: data.feesDate,
                     courseId: data.courseId,
                     classId: data.classId,
+                    teacherId: data.teacherId,
                 },
             },
         },
@@ -238,7 +240,7 @@ const getStudentById = async (id: string) => {
 };
 
 const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
-    const {feesDate, courseId, classId, password, name, phone, email, status, gender, age} = data;
+    const {feesDate, courseId, classId, teacherId, password, name, phone, email, status, gender, age} = data;
 
     const userData: Prisma.UserUpdateInput = {
         ...(name !== undefined && {name}),
@@ -254,6 +256,7 @@ const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
         ...(feesDate !== undefined && {feesDate}),
         ...(courseId !== undefined && {course: courseId === null ? {disconnect: true} : {connect: {id: courseId}}}),
         ...(classId !== undefined && {class: classId === null ? {disconnect: true} : {connect: {id: classId}}}),
+        ...(teacherId !== undefined && {teacher: teacherId === null ? {disconnect: true} : {connect: {userId: teacherId}}}),
     };
 
     const student = await prisma.student.update({
@@ -265,6 +268,15 @@ const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
         select: studentSelect,
     });
     return flattenStudent(student);
+};
+
+const getStudentsByTeacher = async (teacherId: number) => {
+    const students = await prisma.student.findMany({
+        where: {teacherId},
+        orderBy: {user: {name: "asc"}},
+        select: studentSelect,
+    });
+    return students.map(flattenStudent);
 };
 
 export const UserService = {
@@ -282,4 +294,5 @@ export const UserService = {
     getStudents,
     getStudentById,
     updateStudent,
+    getStudentsByTeacher,
 };

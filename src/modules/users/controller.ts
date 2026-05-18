@@ -1,8 +1,10 @@
 import type {NextFunction, Request, Response} from "express";
 import type {AuthRequest} from "../../common/auth-request";
 import {sendResponse} from "../../common/send-response";
+import {AppError} from "../../common/app-error";
 import {UserService} from "./service";
 import {limitQuerySchema} from "./schema";
+import {UserRole} from "@prisma/client";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -127,6 +129,19 @@ export const patchStudent = async (req: Request, res: Response, next: NextFuncti
     try {
         const student = await UserService.updateStudent(req.params.id as string, req.body);
         sendResponse(res, student);
+    } catch (e) {
+        next(e);
+    }
+};
+
+export const getStudentsByTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const teacherId = parseInt(req.params.id as string);
+        if (req.user!.role === UserRole.TEACHER && req.user!.userId !== String(teacherId)) {
+            throw new AppError("Forbidden", 403);
+        }
+        const students = await UserService.getStudentsByTeacher(teacherId);
+        sendResponse(res, students);
     } catch (e) {
         next(e);
     }

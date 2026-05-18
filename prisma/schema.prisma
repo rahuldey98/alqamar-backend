@@ -31,17 +31,20 @@ model Teacher {
   user     User    @relation(fields: [userId], references: [id])
   meetLink String?
 
-  taughtClasses Class[] @relation("TeacherClasses")
+  taughtClasses Class[]   @relation("TeacherClasses")
+  students      Student[] @relation("TeacherStudents")
 }
 
 model Student {
-  userId   Int       @id
-  user     User      @relation(fields: [userId], references: [id])
-  feesDate DateTime?
-  courseId Int?
-  course   Course?   @relation(fields: [courseId], references: [id])
-  classId  Int?
-  class    Class?    @relation("ClassStudents", fields: [classId], references: [id])
+  userId    Int       @id
+  user      User      @relation(fields: [userId], references: [id])
+  feesDate  DateTime?
+  courseId  Int?
+  course    Course?   @relation(fields: [courseId], references: [id])
+  classId   Int?
+  class     Class?    @relation("ClassStudents", fields: [classId], references: [id])
+  teacherId Int?
+  teacher   Teacher?  @relation("TeacherStudents", fields: [teacherId], references: [userId])
 }
 
 model Course {

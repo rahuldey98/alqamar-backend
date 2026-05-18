@@ -21,6 +21,7 @@ const studentBodySchema = baseUserBody.extend({
     feesDate: z.coerce.date().optional(),
     courseId: z.number().int().positive().optional(),
     classId: z.number().int().positive().optional(),
+    teacherId: z.number().int().positive().optional(),
 });
 
 const userBodySchema = baseUserBody.extend({

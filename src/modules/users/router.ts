@@ -6,6 +6,7 @@ import {
     getCurrentUser,
     getStudent,
     getStudents,
+    getStudentsByTeacher,
     getTeacher,
     getTeachers,
     getUser,
@@ -49,6 +50,10 @@ router.get("/teachers",
     getTeachers,
 );
 router.get("/teachers/:id", getTeacher);
+router.get("/teachers/:id/students",
+    requireRole(UserRole.ADMIN, UserRole.TEACHER),
+    getStudentsByTeacher,
+);
 router.patch("/teachers/:id",
     requireRole(UserRole.ADMIN),
     validateRequest(updateTeacherSchema),
