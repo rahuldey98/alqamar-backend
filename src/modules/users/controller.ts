@@ -3,7 +3,6 @@ import type {AuthRequest} from "../../common/auth-request";
 import {sendResponse} from "../../common/send-response";
 import {AppError} from "../../common/app-error";
 import {UserService} from "./service";
-import {limitQuerySchema} from "./schema";
 import {UserRole} from "@prisma/client";
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
@@ -71,8 +70,7 @@ export const postTeacher = async (req: Request, res: Response, next: NextFunctio
 
 export const getTeachers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {limit} = limitQuerySchema.parse(req.query);
-        const teachers = await UserService.getTeachers(limit);
+        const teachers = await UserService.getTeachers();
         sendResponse(res, teachers);
     } catch (e) {
         next(e);
@@ -108,8 +106,7 @@ export const postStudent = async (req: Request, res: Response, next: NextFunctio
 
 export const getStudents = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {limit} = limitQuerySchema.parse(req.query);
-        const students = await UserService.getStudents(limit);
+        const students = await UserService.getStudents();
         sendResponse(res, students);
     } catch (e) {
         next(e);

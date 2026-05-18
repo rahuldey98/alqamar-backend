@@ -23,7 +23,6 @@ import {
     createAdminSchema,
     createStudentSchema,
     createTeacherSchema,
-    limitQueryRequestSchema,
     updateCurrentUserSchema,
     updateStudentSchema,
     updateTeacherSchema,
@@ -46,7 +45,6 @@ router.post("/teachers",
     postTeacher,
 );
 router.get("/teachers",
-    validateRequest(limitQueryRequestSchema),
     getTeachers,
 );
 router.get("/teachers/:id", getTeacher);
@@ -66,7 +64,6 @@ router.post("/students",
     postStudent,
 );
 router.get("/students",
-    validateRequest(limitQueryRequestSchema),
     getStudents,
 );
 router.get("/students/:id", getStudent);

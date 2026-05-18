@@ -141,10 +141,9 @@ const createTeacher = async (data: TeacherRequestDto) => {
     return getTeacherById(created.id.toString());
 };
 
-const getTeachers = async (limit: number) => {
+const getTeachers = async () => {
     const teachers = await prisma.teacher.findMany({
         orderBy: {user: {name: "asc"}},
-        take: limit,
         select: teacherSelect,
     });
     return teachers.map(flattenTeacher);
@@ -219,10 +218,9 @@ const createStudent = async (data: StudentRequestDto) => {
     return getStudentById(created.id.toString());
 };
 
-const getStudents = async (limit: number) => {
+const getStudents = async () => {
     const students = await prisma.student.findMany({
         orderBy: {user: {name: "asc"}},
-        take: limit,
         select: studentSelect,
     });
     return students.map(flattenStudent);

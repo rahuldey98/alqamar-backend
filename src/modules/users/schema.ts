@@ -49,11 +49,6 @@ export const updateUserSchema = z.object({
 });
 export const updateCurrentUserSchema = z.object({body: userBodySchema.partial()});
 
-export const limitQuerySchema = z.object({
-    limit: z.coerce.number().int().positive().max(100).default(10),
-});
-export const limitQueryRequestSchema = z.object({query: limitQuerySchema});
-
 export type AdminRequestDto = z.infer<typeof adminBodySchema>;
 export type TeacherRequestDto = z.infer<typeof teacherBodySchema>;
 export type StudentRequestDto = z.infer<typeof studentBodySchema>;
