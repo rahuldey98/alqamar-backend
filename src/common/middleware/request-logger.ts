@@ -1,5 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {logger} from "../logger";
+import type {AuthRequest} from "../auth-request";
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
     const startTime = Date.now()
@@ -9,6 +10,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
             method: req.method,
             url: req.originalUrl,
             status: res.statusCode,
+            userId: (req as AuthRequest).user?.userId,
             duration: Date.now() - startTime,
             userAgent: req.get("user-agent"),
             query: Object.keys(req.query).length ? req.query : undefined,
