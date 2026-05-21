@@ -13,6 +13,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
             userId: (req as AuthRequest).user?.userId,
             duration: Date.now() - startTime,
             userAgent: req.get("user-agent"),
+            ip: req.ip,
             query: Object.keys(req.query).length ? req.query : undefined,
             body: Object.keys(req.body || {}).length ? req.body : undefined,
         }
