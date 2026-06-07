@@ -133,7 +133,7 @@ export const patchStudent = async (req: Request, res: Response, next: NextFuncti
 
 export const getStudentsByTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const teacherId = parseInt(req.params.id as string);
+        const teacherId = parseInt(req.user!.userId);
         if (req.user!.role === UserRole.TEACHER && req.user!.userId !== String(teacherId)) {
             throw new AppError("Forbidden", 403);
         }
@@ -143,3 +143,32 @@ export const getStudentsByTeacher = async (req: AuthRequest, res: Response, next
         next(e);
     }
 };
+
+export const createTeacherByStudent = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const teacherId = parseInt(req.user!.userId)
+        const studentData = {
+            ...req.body,
+            teacherId
+        }
+        const student = await UserService.createStudent(studentData)
+        sendResponse(res, student)
+    } catch (e) {
+        next(e)
+    }
+}
+
+export const updateStudentByTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const teacherId = parseInt(req.user!.userId)
+        const studentId = parseInt((req.params.id as string))
+        const student = await UserService.getStudentById(String(studentId))
+        if (student.teacherId !== teacherId) {
+            throw new AppError("Forbidden: You do not manage this student", 403);
+        }
+        const updatedStudent = await UserService.updateStudent(String(studentId), req.body);
+        sendResponse(res, updatedStudent);
+    } catch (e) {
+        next(e)
+    }
+}

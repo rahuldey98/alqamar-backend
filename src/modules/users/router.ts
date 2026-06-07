@@ -3,6 +3,7 @@ import {UserRole} from "@prisma/client";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
 import {
+    createTeacherByStudent,
     getCurrentUser,
     getStudent,
     getStudents,
@@ -18,6 +19,7 @@ import {
     postAdmin,
     postStudent,
     postTeacher,
+    updateStudentByTeacher,
 } from "./controller";
 import {
     createAdminSchema,
@@ -47,11 +49,26 @@ router.post("/teachers",
 router.get("/teachers",
     getTeachers,
 );
-router.get("/teachers/:id", getTeacher);
-router.get("/teachers/:id/students",
-    requireRole(UserRole.ADMIN, UserRole.TEACHER),
+
+router.post(
+    "/teachers/students",
+    validateRequest(createStudentSchema),
+    requireRole(UserRole.TEACHER),
+    createTeacherByStudent
+)
+
+router.patch(
+    "/teachers/students/:id",
+    requireRole(UserRole.TEACHER),
+    validateRequest(updateStudentSchema),
+    updateStudentByTeacher
+)
+router.get("/teachers/students",
+    requireRole(UserRole.TEACHER),
     getStudentsByTeacher,
 );
+
+router.get("/teachers/:id", getTeacher);
 router.patch("/teachers/:id",
     requireRole(UserRole.ADMIN),
     validateRequest(updateTeacherSchema),
