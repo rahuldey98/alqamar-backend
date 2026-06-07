@@ -67,31 +67,36 @@ const buildDateFilter = (data: { fromDate?: string; toDate?: string }) => {
 const getAttendanceLog = async (userId: number, role: UserRole, data: GetAttendanceRequest) => {
     const dateFilter = buildDateFilter(data);
 
-    const attendances = await prisma.attendance.findMany({
-        where: {
-            userId,
-            ...(dateFilter && {date: dateFilter}),
-            class: {status: Status.ACTIVE},
-        },
-        include: {
-            class: {
-                include: {
-                    course: {select: {id: true, title: true}},
-                    teacher: {include: {user: {select: {id: true, name: true}}}},
+    const [attendances, student] = await Promise.all([
+        prisma.attendance.findMany({
+            where: {
+                userId,
+                ...(dateFilter && {date: dateFilter}),
+                class: {status: Status.ACTIVE},
+            },
+            include: {
+                class: {
+                    include: {
+                        teacher: {include: {user: {select: {id: true, name: true}}}},
+                    },
                 },
             },
-        },
-        orderBy: [{date: "desc"}, {classId: "asc"}],
-    });
+            orderBy: [{date: "desc"}, {classId: "asc"}],
+        }),
+        prisma.student.findUnique({
+            where: {userId},
+            include: {course: {select: {id: true, title: true}}},
+        }),
+    ]);
 
     return attendances.map(record => ({
         classId: record.classId,
         date: record.date,
         present: true,
-        course: {
-            courseId: record.class.course.id,
-            courseTitle: record.class.course.title,
-        },
+        course: student?.course ? {
+            courseId: student.course.id,
+            courseTitle: student.course.title,
+        } : null,
         teacher: {
             teacherId: record.class.teacher.user.id,
             teacherName: record.class.teacher.user.name,

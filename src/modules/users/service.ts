@@ -23,7 +23,6 @@ const studentSelect = {
             meetLink: true,
             status: true,
             startDate: true,
-            course: {select: {id: true, title: true, enTitle: true}},
         },
     },
     teacherId: true,

@@ -10,14 +10,18 @@ const teacherInclude = {
 } as const;
 
 const studentInclude = {
-    students: {include: {user: {select: publicUserSelect}}},
+    students: {
+        include: {
+            user: {select: publicUserSelect},
+            course: {select: {id: true, title: true, enTitle: true}},
+        },
+    },
 } as const;
 
 const createClasses = async (data: ClassesRequestDto) => {
     return prisma.$transaction(async (tx) => {
         const created = await tx.class.create({
             data: {
-                courseId: data.courseId,
                 teacherId: Number(data.teacherId),
                 meetLink: data.meetLink,
                 schedules: {
@@ -85,7 +89,6 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
         const updated = await tx.class.update({
             where: {id: id},
             data: {
-                ...(data.courseId !== undefined && {courseId: data.courseId}),
                 ...(data.teacherId !== undefined && {teacherId: Number(data.teacherId)}),
                 ...(data.meetLink !== undefined && {meetLink: data.meetLink}),
 
@@ -131,7 +134,6 @@ const getSchedules = async (userId: number, role: UserRole) => {
                 : {students: {some: {userId}}}),
         },
         include: {
-            course: true,
             ...teacherInclude,
             ...studentInclude,
             schedules: {
@@ -144,7 +146,7 @@ const getSchedules = async (userId: number, role: UserRole) => {
         schedules.map(schedule => ({
             ...schedule,
             classId: cls.id,
-            course: cls.course,
+            course: cls.students[0]?.course ?? null,
             teacherName: cls.teacher.user.name,
             studentNames: cls.students.map((student) => student.user.name),
             meetLink: cls.teacher.meetLink,
@@ -175,7 +177,6 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
                 : {students: {some: {userId}}}),
         },
         include: {
-            course: true,
             ...teacherInclude,
             ...studentInclude,
             schedules: {
@@ -193,7 +194,7 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
             cls.schedules.map(schedule => {
                 return {
                     ...schedule,
-                    course: cls.course,
+                    course: cls.students[0]?.course ?? null,
                     teacherName: cls.teacher.user.name,
                     studentNames: cls.students.map((student) => student.user.name),
                     meetLink: cls.teacher.meetLink,

@@ -53,14 +53,11 @@ model Course {
   enTitle        String?
   durationMonths Int
   status         Status    @default(ACTIVE)
-  classes        Class[]
   students       Student[]
 }
 
 model Class {
   id        Int       @id @default(autoincrement())
-  courseId  Int
-  course    Course    @relation(fields: [courseId], references: [id])
   teacherId Int
   teacher   Teacher   @relation("TeacherClasses", fields: [teacherId], references: [userId])
   meetLink  String?
