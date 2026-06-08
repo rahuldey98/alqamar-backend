@@ -267,9 +267,12 @@ const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
     return flattenStudent(student);
 };
 
-const getStudentsByTeacher = async (teacherId: number) => {
+const getStudentsByTeacher = async (teacherId: number, courseId?: number) => {
     const students = await prisma.student.findMany({
-        where: {teacherId},
+        where: {
+            teacherId,
+            ...(courseId !== undefined && {courseId}),
+        },
         orderBy: {user: {name: "asc"}},
         select: studentSelect,
     });

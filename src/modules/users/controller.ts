@@ -137,7 +137,8 @@ export const getStudentsByTeacher = async (req: AuthRequest, res: Response, next
         if (req.user!.role === UserRole.TEACHER && req.user!.userId !== String(teacherId)) {
             throw new AppError("Forbidden", 403);
         }
-        const students = await UserService.getStudentsByTeacher(teacherId);
+        const courseId = req.query.courseId ? Number(req.query.courseId) : undefined;
+        const students = await UserService.getStudentsByTeacher(teacherId, courseId);
         sendResponse(res, students);
     } catch (e) {
         next(e);
