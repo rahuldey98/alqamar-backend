@@ -14,7 +14,11 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
         throw new AppError("Invalid authorization format", 401);
     }
 
-    req.user = verifyToken(token);
+    try {
+        req.user = verifyToken(token);
+    } catch (err) {
+        throw new AppError("Invalid or expired token", 401);
+    }
     next();
 };
 

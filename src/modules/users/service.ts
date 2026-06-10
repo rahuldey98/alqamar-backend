@@ -4,6 +4,7 @@ import {AppError} from "../../common/app-error";
 import {createDefaultPassword, hashPassword} from "../../utils/password";
 import {publicUserSelect} from "../../common/public-user";
 import {AdminRequestDto, StudentRequestDto, TeacherRequestDto, UserRequestDto} from "./schema";
+import {normalizePhone} from "../../utils/phone";
 
 const teacherSelect = {
     userId: true,
@@ -64,6 +65,10 @@ const getCurrentUser = async (userId: string) => {
 const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
     const {password, meetLink, ...otherData} = user;
 
+    if (otherData.phone !== undefined) {
+        otherData.phone = normalizePhone(otherData.phone);
+    }
+
     if (meetLink !== undefined) {
         const dbUser = await prisma.user.findUnique({
             where: {id: parseInt(id)},
@@ -105,7 +110,7 @@ const createAdmin = async (data: AdminRequestDto) => {
     return prisma.user.create({
         data: {
             name: data.name,
-            phone: data.phone,
+            phone: normalizePhone(data.phone),
             email: data.email,
             password: hashedPassword,
             role: UserRole.ADMIN,
@@ -124,7 +129,7 @@ const createTeacher = async (data: TeacherRequestDto) => {
     const created = await prisma.user.create({
         data: {
             name: data.name,
-            phone: data.phone,
+            phone: normalizePhone(data.phone),
             email: data.email,
             password: hashedPassword,
             role: UserRole.TEACHER,
@@ -164,7 +169,7 @@ const updateTeacher = async (id: string, data: Partial<TeacherRequestDto>) => {
 
     const userData: Prisma.UserUpdateInput = {
         ...(name !== undefined && {name}),
-        ...(phone !== undefined && {phone}),
+        ...(phone !== undefined && {phone: normalizePhone(phone)}),
         ...(email !== undefined && {email}),
         ...(status !== undefined && {status}),
         ...(gender !== undefined && {gender}),
@@ -196,7 +201,7 @@ const createStudent = async (data: StudentRequestDto) => {
     const created = await prisma.user.create({
         data: {
             name: data.name,
-            phone: data.phone,
+            phone: normalizePhone(data.phone),
             email: data.email,
             password: hashedPassword,
             role: UserRole.STUDENT,
@@ -241,7 +246,7 @@ const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
 
     const userData: Prisma.UserUpdateInput = {
         ...(name !== undefined && {name}),
-        ...(phone !== undefined && {phone}),
+        ...(phone !== undefined && {phone: normalizePhone(phone)}),
         ...(email !== undefined && {email}),
         ...(status !== undefined && {status}),
         ...(gender !== undefined && {gender}),

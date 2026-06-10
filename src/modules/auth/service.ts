@@ -3,10 +3,11 @@ import {verifyPassword} from "../../utils/password";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
 import {LoginRequestDto} from "./schema";
+import {normalizePhone} from "../../utils/phone";
 
 const login = async (user: LoginRequestDto) => {
     const dbUser = await prisma.user.findUnique({
-        where: {phone: user.phone}
+        where: {phone: normalizePhone(user.phone)}
     });
 
     if (!dbUser) {
