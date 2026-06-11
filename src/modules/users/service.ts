@@ -32,6 +32,15 @@ const studentSelect = {
         },
     },
     teacherId: true,
+    teacher: {
+        select: {
+            user: {
+                select: {
+                    name: true,
+                },
+            },
+        },
+    },
     user: {select: publicUserSelect},
 } satisfies Prisma.StudentSelect;
 
@@ -48,8 +57,12 @@ const flattenTeacher = (t: RawTeacher) => {
 };
 
 const flattenStudent = (s: RawStudent) => {
-    const {user, userId, ...studentFields} = s;
-    return {...user, ...studentFields};
+    const {user, userId, teacher, ...studentFields} = s;
+    return {
+        ...user,
+        ...studentFields,
+        teacherName: teacher?.user?.name ?? null,
+    };
 };
 
 const getUsers = async () => {
