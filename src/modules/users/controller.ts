@@ -145,6 +145,17 @@ export const getStudentsByTeacher = async (req: AuthRequest, res: Response, next
     }
 };
 
+export const getStudentsByTeacherId = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const teacherId = parseInt(req.params.id as string);
+        const courseId = req.query.courseId ? Number(req.query.courseId) : undefined;
+        const students = await UserService.getStudentsByTeacher(teacherId, courseId);
+        sendResponse(res, students);
+    } catch (e) {
+        next(e);
+    }
+};
+
 export const createTeacherByStudent = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const teacherId = parseInt(req.user!.userId)

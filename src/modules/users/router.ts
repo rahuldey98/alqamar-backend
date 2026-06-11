@@ -8,6 +8,7 @@ import {
     getStudent,
     getStudents,
     getStudentsByTeacher,
+    getStudentsByTeacherId,
     getTeacher,
     getTeachers,
     getUser,
@@ -67,6 +68,8 @@ router.get("/teachers/students",
     requireRole(UserRole.TEACHER),
     getStudentsByTeacher,
 );
+
+router.get("/teachers/:id/students", getStudentsByTeacherId);
 
 router.get("/teachers/:id", getTeacher);
 router.patch("/teachers/:id",
