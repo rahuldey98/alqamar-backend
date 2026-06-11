@@ -61,7 +61,7 @@ const flattenStudent = (s: RawStudent) => {
     return {
         ...user,
         ...studentFields,
-        teacherName: teacher?.user?.name ?? null,
+        teacher: teacher ? {name: teacher.user.name} : null,
     };
 };
 
