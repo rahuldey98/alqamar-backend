@@ -10,6 +10,11 @@ const teacherSelect = {
     userId: true,
     meetLink: true,
     user: {select: publicUserSelect},
+    _count: {
+        select: {
+            students: true,
+        },
+    },
 } satisfies Prisma.TeacherSelect;
 
 const studentSelect = {
@@ -34,8 +39,12 @@ type RawTeacher = Prisma.TeacherGetPayload<{select: typeof teacherSelect}>;
 type RawStudent = Prisma.StudentGetPayload<{select: typeof studentSelect}>;
 
 const flattenTeacher = (t: RawTeacher) => {
-    const {user, userId, ...teacherFields} = t;
-    return {...user, ...teacherFields};
+    const {user, userId, _count, ...teacherFields} = t;
+    return {
+        ...user,
+        ...teacherFields,
+        noOfStudents: _count?.students ?? 0,
+    };
 };
 
 const flattenStudent = (s: RawStudent) => {
