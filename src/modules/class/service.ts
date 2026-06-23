@@ -224,7 +224,10 @@ const getClassAttendance = async (date: string) => {
     const dayOfWeek = getDayOfWeekFromDate(date);
 
     const classes = await prisma.class.findMany({
-        where: {status: Status.ACTIVE},
+        where: {
+            status: Status.ACTIVE,
+            schedules: {some: {status: Status.ACTIVE, dayOfWeek}},
+        },
         include: {
             teacher: {include: {user: {select: {id: true, name: true}}}},
             students: {
