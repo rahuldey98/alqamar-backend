@@ -27,5 +27,11 @@ export const updateClassesSchema = z.object({
     })
 })
 
+export const getClassAttendanceSchema = z.object({
+    query: z.object({
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "date must be YYYY-MM-DD"),
+    })
+})
+
 
 export type ClassesRequestDto = z.infer<typeof classSchema>

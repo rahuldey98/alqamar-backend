@@ -1,8 +1,8 @@
 import {Router} from "express";
 import {UserRole} from "@prisma/client";
-import {createClasses, getClasses, getClassesById, getSchedules, getTodayClasses, updateClasses} from "./controller";
+import {createClasses, getClassAttendance, getClasses, getClassesById, getSchedules, getTodayClasses, updateClasses} from "./controller";
 import {validateRequest} from "../../common/middleware/validate.middleware";
-import {createClassesSchema, updateClassesSchema} from "./schema";
+import {createClassesSchema, getClassAttendanceSchema, updateClassesSchema} from "./schema";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 
 const router = Router()
@@ -25,6 +25,12 @@ router.get("/today",
 router.get("/schedules",
     requireRole(UserRole.TEACHER, UserRole.STUDENT),
     getSchedules
+)
+
+router.get("/attendance",
+    requireRole(UserRole.ADMIN),
+    validateRequest(getClassAttendanceSchema),
+    getClassAttendance
 )
 
 router.patch("/:id",

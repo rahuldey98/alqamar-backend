@@ -56,3 +56,12 @@ export const getSchedules = async (req: AuthRequest, res: Response, next: NextFu
         next(e)
     }
 }
+
+export const getClassAttendance = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await ClassService.getClassAttendance(req.query.date as string)
+        sendResponse(res, result)
+    } catch (e) {
+        next(e)
+    }
+}

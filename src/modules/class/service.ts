@@ -3,7 +3,21 @@ import {ClassesRequestDto} from "./schema";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
 import {publicUserSelect} from "../../common/public-user";
-import {getCurrentDayOfWeek} from "../../utils/date";
+import {getCurrentDayOfWeek, getDayOfWeekFromDate} from "../../utils/date";
+
+export enum ClassAttendanceStatus {
+    NOT_PRESENT = "not present",
+    TEACHER_PRESENT = "teacher present",
+    STUDENT_PRESENT = "student present",
+    ALL_PRESENT = "all present",
+}
+
+const resolveStatus = (teacherPresent: boolean, studentPresent: boolean): ClassAttendanceStatus => {
+    if (teacherPresent && studentPresent) return ClassAttendanceStatus.ALL_PRESENT;
+    if (teacherPresent) return ClassAttendanceStatus.TEACHER_PRESENT;
+    if (studentPresent) return ClassAttendanceStatus.STUDENT_PRESENT;
+    return ClassAttendanceStatus.NOT_PRESENT;
+};
 
 const teacherInclude = {
     teacher: {include: {user: {select: publicUserSelect}}},
@@ -206,11 +220,55 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
         });
 }
 
+const getClassAttendance = async (date: string) => {
+    const dayOfWeek = getDayOfWeekFromDate(date);
+
+    const classes = await prisma.class.findMany({
+        where: {status: Status.ACTIVE},
+        include: {
+            teacher: {include: {user: {select: {id: true, name: true}}}},
+            students: {
+                include: {
+                    user: {select: {id: true, name: true}},
+                    course: {select: {title: true, enTitle: true}},
+                },
+                orderBy: {userId: "asc"},
+            },
+            // date is a timestamp string ("2026-06-10 05:00:14.987"); match by day prefix
+            attendances: {where: {date: {startsWith: date}}},
+            schedules: {
+                where: {status: Status.ACTIVE, dayOfWeek},
+                orderBy: {startTime: "asc"},
+                select: {startTime: true, endTime: true},
+            },
+        },
+        orderBy: {id: "asc"},
+    });
+
+    return classes.map(cls => {
+        const firstStudent = cls.students[0];
+        const schedule = cls.schedules[0];
+        const teacherPresent = cls.attendances.some(a => a.userId === cls.teacherId);
+        const studentPresent = !!firstStudent && cls.attendances.some(a => a.userId === firstStudent.userId);
+        return {
+            classId: cls.id,
+            className: firstStudent?.course?.title ?? null,
+            teacherName: cls.teacher.user.name,
+            studentName: firstStudent?.user.name ?? null,
+            date,
+            startTime: schedule?.startTime ?? null,
+            endTime: schedule?.endTime ?? null,
+            attendanceStatus: resolveStatus(teacherPresent, studentPresent),
+        };
+    });
+};
+
 export const ClassService = {
     createClasses,
     getClasses,
     updateClasses,
     getClassesById,
     getSchedules,
-    getTodayClasses
+    getTodayClasses,
+    getClassAttendance
 }
