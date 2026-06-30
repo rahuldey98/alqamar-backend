@@ -81,11 +81,12 @@ const createClasses = async (data: ClassesRequestDto) => {
 
 const getClasses = (userId: number, role: UserRole) => {
     if (role === UserRole.ADMIN) {
-        return prisma.class.findMany();
+        // exclude orphaned classes that have no students; they crash the client
+        return prisma.class.findMany({where: {students: {some: {}}}});
     }
 
     const where = role === UserRole.TEACHER
-        ? {teacher: {userId}}
+        ? {teacher: {userId}, students: {some: {}}}
         : {students: {some: {userId}}};
 
     return prisma.class.findMany({
@@ -173,6 +174,7 @@ const getSchedules = async (userId: number, role: UserRole) => {
     const classes = await prisma.class.findMany({
         where: {
             status: Status.ACTIVE,
+            students: {some: {}},
             ...(role === UserRole.TEACHER
                 ? {teacher: {userId}}
                 : {students: {some: {userId}}}),
@@ -216,6 +218,7 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
     const classes = await prisma.class.findMany({
         where: {
             status: Status.ACTIVE,
+            students: {some: {}},
             ...(role === UserRole.TEACHER
                 ? {teacher: {userId}}
                 : {students: {some: {userId}}}),
@@ -256,6 +259,7 @@ const getClassAttendance = async (date: string) => {
     const classes = await prisma.class.findMany({
         where: {
             status: Status.ACTIVE,
+            students: {some: {}},
             schedules: {some: {status: Status.ACTIVE, dayOfWeek}},
         },
         include: {
