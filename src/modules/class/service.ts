@@ -34,6 +34,21 @@ const studentInclude = {
 
 const createClasses = async (data: ClassesRequestDto) => {
     return prisma.$transaction(async (tx) => {
+        const conflicting = await tx.student.findMany({
+            where: {
+                userId: {in: data.studentIds},
+                classId: {not: null},
+                class: {status: Status.ACTIVE},
+            },
+            select: {userId: true, classId: true},
+        });
+        if (conflicting.length > 0) {
+            throw new AppError(
+                `Students already assigned to an active class: ${conflicting.map(s => s.userId).join(", ")}`,
+                400,
+            );
+        }
+
         const created = await tx.class.create({
             data: {
                 teacherId: Number(data.teacherId),
@@ -119,6 +134,21 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
         });
 
         if (data.studentIds) {
+            const conflicting = await tx.student.findMany({
+                where: {
+                    userId: {in: data.studentIds},
+                    AND: [{classId: {not: null}}, {classId: {not: id}}],
+                    class: {status: Status.ACTIVE},
+                },
+                select: {userId: true, classId: true},
+            });
+            if (conflicting.length > 0) {
+                throw new AppError(
+                    `Students already assigned to an active class: ${conflicting.map(s => s.userId).join(", ")}`,
+                    400,
+                );
+            }
+
             await tx.student.updateMany({
                 where: {classId: id},
                 data: {classId: null},
