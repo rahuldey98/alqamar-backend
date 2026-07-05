@@ -43,10 +43,52 @@ const createClasses = async (data: ClassesRequestDto) => {
             select: {userId: true, classId: true},
         });
         if (conflicting.length > 0) {
-            throw new AppError(
-                `Students already assigned to an active class: ${conflicting.map(s => s.userId).join(", ")}`,
-                400,
-            );
+            const conflictingClassIds = [...new Set(conflicting.map(student => student.classId).filter((classId): classId is number => classId !== null))];
+
+            if (conflictingClassIds.length !== 1) {
+                throw new AppError(
+                    `Students already assigned to an active class: ${conflicting.map(s => s.userId).join(", ")}`,
+                    400,
+                );
+            }
+
+            const [targetClassId] = conflictingClassIds;
+            const incomingDays = data.schedules.map(schedule => schedule.dayOfWeek);
+            const existingClass = await tx.class.findFirst({
+                where: {
+                    id: targetClassId,
+                    status: Status.ACTIVE,
+                },
+                include: {schedules: true},
+            });
+
+            if (!existingClass) {
+                throw new AppError("No active class found for conflicting students", 400);
+            }
+
+            await tx.classSchedule.deleteMany({
+                where: {
+                    classId: targetClassId,
+                    dayOfWeek: {in: incomingDays},
+                },
+            });
+
+            await tx.classSchedule.createMany({
+                data: data.schedules.map(schedule => ({
+                    classId: targetClassId,
+                    dayOfWeek: schedule.dayOfWeek,
+                    startTime: schedule.startTime,
+                    endTime: schedule.endTime,
+                })),
+            });
+
+            return tx.class.findUnique({
+                where: {id: targetClassId},
+                include: {
+                    schedules: true,
+                    ...studentInclude,
+                },
+            });
         }
 
         const created = await tx.class.create({
