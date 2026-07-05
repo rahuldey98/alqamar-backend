@@ -32,6 +32,16 @@ const studentInclude = {
     },
 } as const;
 
+const dayOfWeekOrder: Record<DayOfWeek, number> = {
+    [DayOfWeek.SUNDAY]: 0,
+    [DayOfWeek.MONDAY]: 1,
+    [DayOfWeek.TUESDAY]: 2,
+    [DayOfWeek.WEDNESDAY]: 3,
+    [DayOfWeek.THURSDAY]: 4,
+    [DayOfWeek.FRIDAY]: 5,
+    [DayOfWeek.SATURDAY]: 6,
+};
+
 const createClasses = async (data: ClassesRequestDto) => {
     return prisma.$transaction(async (tx) => {
         const conflicting = await tx.student.findMany({
@@ -226,8 +236,10 @@ const getSchedules = async (userId: number, role: UserRole) => {
             ...studentInclude,
             schedules: {
                 where: {status: Status.ACTIVE},
+                orderBy: {startTime: "asc"},
             },
         },
+        orderBy: {id: "asc"},
     });
 
     const allSchedules = classes.flatMap(({schedules, ...cls}) =>
@@ -251,7 +263,9 @@ const getSchedules = async (userId: number, role: UserRole) => {
     return Array.from(groupedScheduleMap, ([dayOfWeek, schedules]) => ({
         dayOfWeek,
         schedules
-    }))
+    })).sort((firstDay, secondDay) => {
+        return dayOfWeekOrder[firstDay.dayOfWeek] - dayOfWeekOrder[secondDay.dayOfWeek];
+    })
 }
 
 const getTodayClasses = async (userId: number, role: UserRole) => {
