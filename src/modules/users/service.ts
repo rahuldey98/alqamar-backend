@@ -47,6 +47,28 @@ const studentSelect = {
 type RawTeacher = Prisma.TeacherGetPayload<{select: typeof teacherSelect}>;
 type RawStudent = Prisma.StudentGetPayload<{select: typeof studentSelect}>;
 
+const deactivateActiveClassesForInactiveStudents = async (
+    tx: Prisma.TransactionClient,
+    studentIds: number[],
+) => {
+    if (studentIds.length === 0) {
+        return;
+    }
+
+    await tx.class.updateMany({
+        where: {
+            status: Status.ACTIVE,
+            students: {
+                some: {
+                    userId: {in: studentIds},
+                    user: {status: Status.INACTIVE},
+                },
+            },
+        },
+        data: {status: Status.INACTIVE},
+    });
+};
+
 const flattenTeacher = (t: RawTeacher) => {
     const {user, userId, _count, ...teacherFields} = t;
     return {
@@ -86,20 +108,26 @@ const getCurrentUser = async (userId: string) => {
 
 const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
     const {password, meetLink, ...otherData} = user;
+    const userId = parseInt(id);
 
     if (otherData.phone !== undefined) {
         otherData.phone = normalizePhone(otherData.phone);
     }
 
-    if (meetLink !== undefined) {
-        const dbUser = await prisma.user.findUnique({
-            where: {id: parseInt(id)},
+    const shouldDeactivateStudentClasses = otherData.status === Status.INACTIVE;
+    let dbUser: {role: UserRole} | null = null;
+    if (meetLink !== undefined || shouldDeactivateStudentClasses) {
+        dbUser = await prisma.user.findUnique({
+            where: {id: userId},
             select: {role: true},
         });
         if (!dbUser) {
             throw new AppError("No user found", 400);
         }
-        if (dbUser.role !== UserRole.TEACHER) {
+    }
+
+    if (meetLink !== undefined) {
+        if (dbUser?.role !== UserRole.TEACHER) {
             throw new AppError("Only teachers can update meet link", 403);
         }
     }
@@ -114,10 +142,18 @@ const updateUser = async (id: string, user: Partial<UserRequestDto>) => {
         }),
     };
 
-    return prisma.user.update({
-        where: {id: parseInt(id)},
-        data: updateData,
-        select: publicUserSelect,
+    return prisma.$transaction(async (tx) => {
+        const updated = await tx.user.update({
+            where: {id: userId},
+            data: updateData,
+            select: publicUserSelect,
+        });
+
+        if (shouldDeactivateStudentClasses && dbUser?.role === UserRole.STUDENT) {
+            await deactivateActiveClassesForInactiveStudents(tx, [userId]);
+        }
+
+        return updated;
     });
 };
 
@@ -220,28 +256,42 @@ const createStudent = async (data: StudentRequestDto) => {
     const plainPassword = data.password || createDefaultPassword(data.name);
     const hashedPassword = await hashPassword(plainPassword);
 
-    const created = await prisma.user.create({
-        data: {
-            name: data.name,
-            phone: normalizePhone(data.phone),
-            email: data.email,
-            password: hashedPassword,
-            role: UserRole.STUDENT,
-            status: data.status,
-            gender: data.gender,
-            age: data.age,
-            student: {
-                create: {
-                    feesDate: data.feesDate,
-                    courseId: data.courseId,
-                    classId: data.classId,
-                    teacherId: data.teacherId,
+    const student = await prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+            data: {
+                name: data.name,
+                phone: normalizePhone(data.phone),
+                email: data.email,
+                password: hashedPassword,
+                role: UserRole.STUDENT,
+                status: data.status,
+                gender: data.gender,
+                age: data.age,
+                student: {
+                    create: {
+                        feesDate: data.feesDate,
+                        courseId: data.courseId,
+                        classId: data.classId,
+                        teacherId: data.teacherId,
+                    },
                 },
             },
-        },
-        select: {id: true},
+            select: {id: true},
+        });
+
+        if (data.status === Status.INACTIVE) {
+            await deactivateActiveClassesForInactiveStudents(tx, [created.id]);
+        }
+
+        return tx.student.findUnique({
+            where: {userId: created.id},
+            select: studentSelect,
+        });
     });
-    return getStudentById(created.id.toString());
+    if (!student) {
+        throw new AppError("No student found", 400);
+    }
+    return flattenStudent(student);
 };
 
 const getStudents = async () => {
@@ -283,13 +333,22 @@ const updateStudent = async (id: string, data: Partial<StudentRequestDto>) => {
         ...(teacherId !== undefined && {teacher: teacherId === null ? {disconnect: true} : {connect: {userId: teacherId}}}),
     };
 
-    const student = await prisma.student.update({
-        where: {userId: parseInt(id)},
-        data: {
-            ...studentData,
-            ...(Object.keys(userData).length > 0 && {user: {update: userData}}),
-        },
-        select: studentSelect,
+    const userId = parseInt(id);
+    const student = await prisma.$transaction(async (tx) => {
+        const updated = await tx.student.update({
+            where: {userId},
+            data: {
+                ...studentData,
+                ...(Object.keys(userData).length > 0 && {user: {update: userData}}),
+            },
+            select: studentSelect,
+        });
+
+        if (status === Status.INACTIVE) {
+            await deactivateActiveClassesForInactiveStudents(tx, [userId]);
+        }
+
+        return updated;
     });
     return flattenStudent(student);
 };

@@ -1,4 +1,4 @@
-import {DayOfWeek, Status, UserRole} from "@prisma/client";
+import {DayOfWeek, Prisma, Status, UserRole} from "@prisma/client";
 import {ClassesRequestDto} from "./schema";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
@@ -42,8 +42,30 @@ const dayOfWeekOrder: Record<DayOfWeek, number> = {
     [DayOfWeek.SATURDAY]: 6,
 };
 
+const ensureStudentsAreActive = async (
+    tx: Prisma.TransactionClient,
+    studentIds: number[],
+) => {
+    const inactiveStudents = await tx.student.findMany({
+        where: {
+            userId: {in: studentIds},
+            user: {status: Status.INACTIVE},
+        },
+        select: {userId: true},
+    });
+
+    if (inactiveStudents.length > 0) {
+        throw new AppError(
+            `Inactive students cannot be assigned to active classes: ${inactiveStudents.map(s => s.userId).join(", ")}`,
+            400,
+        );
+    }
+};
+
 const createClasses = async (data: ClassesRequestDto) => {
     return prisma.$transaction(async (tx) => {
+        await ensureStudentsAreActive(tx, data.studentIds);
+
         const conflicting = await tx.student.findMany({
             where: {
                 userId: {in: data.studentIds},
@@ -187,6 +209,8 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
         });
 
         if (data.studentIds) {
+            await ensureStudentsAreActive(tx, data.studentIds);
+
             const conflicting = await tx.student.findMany({
                 where: {
                     userId: {in: data.studentIds},
@@ -226,10 +250,13 @@ const getSchedules = async (userId: number, role: UserRole) => {
     const classes = await prisma.class.findMany({
         where: {
             status: Status.ACTIVE,
-            students: {some: {}},
+            students: {
+                some: role === UserRole.STUDENT ? {userId} : {},
+                none: {user: {status: Status.INACTIVE}},
+            },
             ...(role === UserRole.TEACHER
                 ? {teacher: {userId}}
-                : {students: {some: {userId}}}),
+                : {}),
         },
         include: {
             ...teacherInclude,
@@ -274,10 +301,13 @@ const getTodayClasses = async (userId: number, role: UserRole) => {
     const classes = await prisma.class.findMany({
         where: {
             status: Status.ACTIVE,
-            students: {some: {}},
+            students: {
+                some: role === UserRole.STUDENT ? {userId} : {},
+                none: {user: {status: Status.INACTIVE}},
+            },
             ...(role === UserRole.TEACHER
                 ? {teacher: {userId}}
-                : {students: {some: {userId}}}),
+                : {}),
         },
         include: {
             ...teacherInclude,
