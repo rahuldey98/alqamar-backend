@@ -1,5 +1,5 @@
 import {prisma} from "../../db/prisma";
-import {Prisma, UserRole} from "@prisma/client";
+import {Prisma, Status, UserRole} from "@prisma/client";
 import {AppError} from "../../common/app-error";
 import {createDefaultPassword, hashPassword} from "../../utils/password";
 import {publicUserSelect} from "../../common/public-user";
@@ -298,6 +298,7 @@ const getStudentsByTeacher = async (teacherId: number, courseId?: number) => {
     const students = await prisma.student.findMany({
         where: {
             teacherId,
+            user: {status: Status.ACTIVE},
             ...(courseId !== undefined && {courseId}),
         },
         orderBy: {user: {name: "asc"}},
