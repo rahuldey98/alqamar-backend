@@ -34,23 +34,43 @@ const markAttendance = async (userId: number, role: UserRole, data: MarkAttendan
         throw new AppError("Forbidden: insufficient role permissions", 403);
     }
 
-    const record = await prisma.attendance.upsert({
-        where: {
-            classId_userId_date: {
+    try {
+        const record = await prisma.attendance.upsert({
+            where: {
+                classId_userId_date: {
+                    classId: data.classId,
+                    userId,
+                    date: data.date,
+                },
+            },
+            update: {},
+            create: {
                 classId: data.classId,
                 userId,
                 date: data.date,
             },
-        },
-        update: {},
-        create: {
-            classId: data.classId,
-            userId,
-            date: data.date,
-        },
-    });
+        });
 
-    return {role, ...record};
+        return {role, ...record};
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            // Under high concurrency, another request might have inserted the record between the find and create stages of the upsert.
+            // Since it already exists, we can safely fetch and return the existing record.
+            const record = await prisma.attendance.findUnique({
+                where: {
+                    classId_userId_date: {
+                        classId: data.classId,
+                        userId,
+                        date: data.date,
+                    },
+                },
+            });
+            if (record) {
+                return {role, ...record};
+            }
+        }
+        throw error;
+    }
 };
 
 const buildDateFilter = (data: { fromDate?: string; toDate?: string }) => {

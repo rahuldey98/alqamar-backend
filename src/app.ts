@@ -29,6 +29,10 @@ app.use("/courses", courseRoutes);
 app.use("/attendance", attendanceRoutes);
 app.use("/dashboard", dashboardRoutes);
 
+app.get("/", (req, res) => {
+    res.json({ status: "healthy", message: "Alqamar API is running" });
+});
+
 app.use(errorHandler);
 
 app.listen(port, () => {
