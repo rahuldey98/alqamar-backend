@@ -294,6 +294,35 @@ const createStudent = async (data: StudentRequestDto) => {
     return flattenStudent(student);
 };
 
+const createOrReassignStudentForTeacher = async (data: StudentRequestDto & { teacherId: number }) => {
+    const normalizedPhone = normalizePhone(data.phone);
+
+    const existingUser = await prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+        include: { student: true }
+    });
+
+    if (existingUser) {
+        if (existingUser.role !== UserRole.STUDENT || !existingUser.student) {
+            throw new AppError("A user with this phone number already exists and is not a student.", 409);
+        }
+
+        const currentTeacherId = data.teacherId;
+        const changingTeacher = existingUser.student.teacherId !== currentTeacherId;
+
+        const updated = await updateStudent(String(existingUser.id), {
+            ...data,
+            teacherId: currentTeacherId,
+            status: Status.ACTIVE,
+            ...(changingTeacher && data.classId === undefined && { classId: null as any })
+        });
+        return updated;
+    }
+
+    return createStudent(data);
+};
+
+
 const getStudents = async () => {
     const students = await prisma.student.findMany({
         orderBy: {user: {name: "asc"}},
@@ -378,6 +407,7 @@ export const UserService = {
     getTeacherById,
     updateTeacher,
     createStudent,
+    createOrReassignStudentForTeacher,
     getStudents,
     getStudentById,
     updateStudent,

@@ -163,7 +163,7 @@ export const createTeacherByStudent = async (req: AuthRequest, res: Response, ne
             ...req.body,
             teacherId
         }
-        const student = await UserService.createStudent(studentData)
+        const student = await UserService.createOrReassignStudentForTeacher(studentData)
         sendResponse(res, student)
     } catch (e) {
         next(e)
