@@ -20,6 +20,8 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 
         if (res.statusCode >= 400) {
             logger.error("Request failed", logData);
+        } else if (res.statusCode >= 400) {
+            logger.warn("Request failed", logData);
         } else {
             logger.info("Request completed", logData);
         }
