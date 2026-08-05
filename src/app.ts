@@ -18,6 +18,9 @@ const port = Number(process.env.PORT ?? 3000);
 app.set("trust proxy", 1);
 
 app.use(express.json());
+app.use((req, res, next) => {
+    setTimeout(next, 10000);
+});
 app.use(allowAccessControl);
 app.use(requestLogger);
 app.use(apiRateLimiter);
