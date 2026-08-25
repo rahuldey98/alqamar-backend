@@ -3,6 +3,7 @@ import express from "express";
 import authRoutes from "./modules/auth/router";
 import userRoutes from "./modules/users/router";
 import classRoutes from "./modules/class/router"
+import classV2Routes from "./modules/class-v2/router";
 import courseRoutes from "./modules/course/router"
 import attendanceRoutes from "./modules/attendance/router"
 import dashboardRoutes from "./modules/dashboard/router"
@@ -25,6 +26,7 @@ app.use(apiRateLimiter);
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/classes", classRoutes);
+app.use("/classes-v2", classV2Routes);
 app.use("/courses", courseRoutes);
 app.use("/attendance", attendanceRoutes);
 app.use("/dashboard", dashboardRoutes);

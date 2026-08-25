@@ -31,8 +31,9 @@ model Teacher {
   user     User    @relation(fields: [userId], references: [id])
   meetLink String?
 
-  taughtClasses Class[]   @relation("TeacherClasses")
-  students      Student[] @relation("TeacherStudents")
+  taughtClasses   Class[]   @relation("TeacherClasses")
+  students        Student[] @relation("TeacherStudents")
+  taughtClassesV2 ClassV2[] @relation("TeacherClassesV2")
 }
 
 model Student {
@@ -45,6 +46,7 @@ model Student {
   class     Class?    @relation("ClassStudents", fields: [classId], references: [id])
   teacherId Int?
   teacher   Teacher?  @relation("TeacherStudents", fields: [teacherId], references: [userId])
+  classesV2 ClassV2[] @relation("StudentClassesV2")
 }
 
 model Course {
@@ -116,4 +118,47 @@ enum Status {
 enum Gender {
   MALE
   FEMALE
+}
+
+model ClassV2 {
+  id Int @id @default(autoincrement())
+
+  teacherId Int
+  teacher   Teacher @relation("TeacherClassesV2", fields: [teacherId], references: [userId], onDelete: Cascade)
+
+  studentId Int
+  student   Student @relation("StudentClassesV2", fields: [studentId], references: [userId], onDelete: Cascade)
+
+  date      String  @db.VarChar(10) // "YYYY-MM-DD"
+  startTime String  @db.VarChar(5) // "HH:MM" 24-hr
+  endTime   String  @db.VarChar(5) // "HH:MM" 24-hr
+  meetLink  String?
+  status    Status  @default(ACTIVE)
+
+  // Embedded Attendance
+  teacherAttended  Boolean               @default(false)
+  studentAttended  Boolean               @default(false)
+  teacherJoinedAt  DateTime?
+  studentJoinedAt  DateTime?
+  attendanceStatus ClassAttendanceStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Composite indexes for high-throughput queries
+  @@index([date, status])
+  @@index([date, teacherId])
+  @@index([date, studentId])
+  @@index([status, endTime])
+  @@index([teacherId, endTime])
+  @@index([studentId, endTime])
+  @@map("class_v2")
+}
+
+enum ClassAttendanceStatus {
+  PENDING
+  TEACHER_PRESENT
+  STUDENT_PRESENT
+  ALL_PRESENT
+  ABSENT
 }
