@@ -2,8 +2,22 @@ import {Router} from "express";
 import {UserRole} from "@prisma/client";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 import {validateRequest} from "../../common/middleware/validate.middleware";
-import {createClassV2Schema, getAttendanceSchema, markAttendanceSchema} from "./schema";
-import {createClass, getActiveClasses, getAttendance, getClassById, markAttendance} from "./controller";
+import {
+    createClassV2Schema,
+    deleteClassV2Schema,
+    getAttendanceSchema,
+    markAttendanceSchema,
+    updateClassV2Schema
+} from "./schema";
+import {
+    createClass,
+    deleteClass,
+    getActiveClasses,
+    getAttendance,
+    getClassById,
+    markAttendance,
+    updateClass
+} from "./controller";
 
 const router = Router();
 
@@ -45,6 +59,22 @@ router.get(
     "/:id",
     requireRole(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT),
     getClassById
+);
+
+// 6. Update class by ID
+router.patch(
+    "/:id",
+    requireRole(UserRole.ADMIN, UserRole.TEACHER),
+    validateRequest(updateClassV2Schema),
+    updateClass
+);
+
+// 7. Delete class by ID (soft-delete)
+router.delete(
+    "/:id",
+    requireRole(UserRole.ADMIN, UserRole.TEACHER),
+    validateRequest(deleteClassV2Schema),
+    deleteClass
 );
 
 export default router;

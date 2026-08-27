@@ -3,7 +3,7 @@ import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
 import {publicUserSelect} from "../../common/public-user";
 import {getCurrentISTTime, getTodayDateIST} from "../../utils/date";
-import {CreateClassV2Dto, MarkAttendanceDto} from "./schema";
+import {CreateClassV2Dto, MarkAttendanceDto, UpdateClassV2Dto} from "./schema";
 
 const studentSelect = {
     include: {
@@ -278,10 +278,171 @@ const getClassById = async (id: number) => {
     return cls;
 };
 
+/**
+ * 6. Update a ClassV2
+ */
+const updateClass = async (
+    classId: number,
+    userId: number,
+    role: UserRole,
+    data: UpdateClassV2Dto
+) => {
+    const cls = await prisma.classV2.findUnique({
+        where: {id: classId},
+        include: {
+            teacher: teacherSelect,
+            student: studentSelect,
+        },
+    });
+
+    if (!cls || cls.status !== Status.ACTIVE) {
+        throw new AppError("Class not found or inactive", 404);
+    }
+
+    if (role === UserRole.TEACHER) {
+        if (cls.teacherId !== userId) {
+            throw new AppError("Forbidden: You are not the teacher for this class", 403);
+        }
+        if (data.teacherId && data.teacherId !== userId) {
+            throw new AppError("Forbidden: Teachers cannot reassign classes to other teachers", 403);
+        }
+    } else if (role !== UserRole.ADMIN) {
+        throw new AppError("Forbidden: insufficient role permissions", 403);
+    }
+
+    const targetDate = data.date ?? cls.date;
+    const effectiveStartTime = data.startTime ?? cls.startTime;
+    const effectiveEndTime = data.endTime ?? cls.endTime;
+    const effectiveTeacherId = (role === UserRole.ADMIN && data.teacherId) ? data.teacherId : cls.teacherId;
+    const effectiveStudentId = data.studentId ?? cls.studentId;
+
+    if (effectiveEndTime <= effectiveStartTime) {
+        throw new AppError("endTime must be strictly after startTime", 400);
+    }
+
+    const todayIST = getTodayDateIST();
+    const currentISTTime = getCurrentISTTime();
+    if (targetDate === todayIST && effectiveEndTime <= currentISTTime) {
+        throw new AppError("Cannot set class endTime to a time that has already passed today in IST", 400);
+    }
+
+    if (data.studentId && data.studentId !== cls.studentId) {
+        if (cls.attendanceStatus !== ClassAttendanceStatus.PENDING || cls.studentAttended || cls.teacherAttended) {
+            throw new AppError("Cannot change student after attendance has been recorded", 400);
+        }
+    }
+
+    if (data.teacherId && data.teacherId !== cls.teacherId) {
+        const teacher = await prisma.teacher.findUnique({
+            where: {userId: effectiveTeacherId},
+            include: {user: true},
+        });
+        if (!teacher || teacher.user.status !== Status.ACTIVE) {
+            throw new AppError("Teacher not found or inactive", 400);
+        }
+    }
+
+    if (data.studentId && data.studentId !== cls.studentId) {
+        const student = await prisma.student.findUnique({
+            where: {userId: effectiveStudentId},
+            include: {user: true},
+        });
+        if (!student || student.user.status !== Status.ACTIVE) {
+            throw new AppError("Student not found or inactive", 400);
+        }
+    }
+
+    const timingOrParticipantsChanged =
+        targetDate !== cls.date ||
+        effectiveStartTime !== cls.startTime ||
+        effectiveEndTime !== cls.endTime ||
+        effectiveTeacherId !== cls.teacherId ||
+        effectiveStudentId !== cls.studentId;
+
+    if (timingOrParticipantsChanged) {
+        const conflict = await prisma.classV2.findFirst({
+            where: {
+                id: {not: classId},
+                date: targetDate,
+                status: Status.ACTIVE,
+                OR: [{teacherId: effectiveTeacherId}, {studentId: effectiveStudentId}],
+                AND: [
+                    {startTime: {lt: effectiveEndTime}},
+                    {endTime: {gt: effectiveStartTime}},
+                ],
+            },
+        });
+
+        if (conflict) {
+            throw new AppError(
+                "A class is already scheduled during this time slot today for the teacher or student",
+                409
+            );
+        }
+    }
+
+    return prisma.classV2.update({
+        where: {id: classId},
+        data: {
+            date: data.date,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            meetLink: data.meetLink !== undefined ? data.meetLink : undefined,
+            teacherId: role === UserRole.ADMIN ? data.teacherId : undefined,
+            studentId: data.studentId,
+        },
+        include: {
+            teacher: teacherSelect,
+            student: studentSelect,
+        },
+    });
+};
+
+/**
+ * 7. Soft-delete a ClassV2 (set status to INACTIVE)
+ */
+const deleteClass = async (classId: number, userId: number, role: UserRole) => {
+    const cls = await prisma.classV2.findUnique({
+        where: {id: classId},
+        include: {
+            teacher: teacherSelect,
+            student: studentSelect,
+        },
+    });
+
+    if (!cls || cls.status !== Status.ACTIVE) {
+        throw new AppError("Class not found or already inactive", 404);
+    }
+
+    if (role === UserRole.TEACHER) {
+        if (cls.teacherId !== userId) {
+            throw new AppError("Forbidden: You are not the teacher for this class", 403);
+        }
+        if (cls.attendanceStatus !== ClassAttendanceStatus.PENDING || cls.teacherAttended || cls.studentAttended) {
+            throw new AppError("Cannot delete class after attendance has been recorded", 400);
+        }
+    } else if (role !== UserRole.ADMIN) {
+        throw new AppError("Forbidden: insufficient role permissions", 403);
+    }
+
+    return prisma.classV2.update({
+        where: {id: classId},
+        data: {
+            status: Status.INACTIVE,
+        },
+        include: {
+            teacher: teacherSelect,
+            student: studentSelect,
+        },
+    });
+};
+
 export const ClassV2Service = {
     createClass,
     getActiveOrUpcomingClasses,
     markAttendance,
     getAttendanceByDate,
     getClassById,
+    updateClass,
+    deleteClass,
 };

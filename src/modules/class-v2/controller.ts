@@ -57,3 +57,27 @@ export const getClassById = async (req: AuthRequest, res: Response, next: NextFu
         next(e);
     }
 };
+
+export const updateClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const classId = Number(req.params.id);
+        const userId = Number(req.user!.userId);
+        const role = req.user!.role;
+        const updated = await ClassV2Service.updateClass(classId, userId, role, req.body);
+        sendResponse(res, updated);
+    } catch (e) {
+        next(e);
+    }
+};
+
+export const deleteClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const classId = Number(req.params.id);
+        const userId = Number(req.user!.userId);
+        const role = req.user!.role;
+        const deleted = await ClassV2Service.deleteClass(classId, userId, role);
+        sendResponse(res, deleted);
+    } catch (e) {
+        next(e);
+    }
+};
