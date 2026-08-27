@@ -447,8 +447,11 @@ const getAttendanceSummary = async (
     filterTeacherId?: number
 ) => {
     let effectiveTeacherId: number | undefined;
+    let effectiveStudentId: number | undefined;
 
-    if (role === UserRole.TEACHER) {
+    if (role === UserRole.STUDENT) {
+        effectiveStudentId = userId;
+    } else if (role === UserRole.TEACHER) {
         if (filterTeacherId && filterTeacherId !== userId) {
             throw new AppError("Forbidden: Teachers can only view their own attendance summary", 403);
         }
@@ -476,6 +479,7 @@ const getAttendanceSummary = async (
             lte: todayIST,
         },
         ...(effectiveTeacherId ? {teacherId: effectiveTeacherId} : {}),
+        ...(effectiveStudentId ? {studentId: effectiveStudentId} : {}),
     };
 
     const records = await prisma.classV2.findMany({

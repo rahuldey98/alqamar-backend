@@ -52,7 +52,7 @@ router.get(
 // 4. Get monthly attendance summary preview in IST (?month=YYYY-MM&teacherId=)
 router.get(
     "/attendance/summary",
-    requireRole(UserRole.ADMIN, UserRole.TEACHER),
+    requireRole(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT),
     validateRequest(getAttendanceSummarySchema),
     getAttendanceSummary
 );
