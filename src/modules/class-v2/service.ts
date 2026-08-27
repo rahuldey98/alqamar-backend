@@ -2,7 +2,7 @@ import {ClassAttendanceStatus, Prisma, Status, UserRole} from "@prisma/client";
 import {prisma} from "../../db/prisma";
 import {AppError} from "../../common/app-error";
 import {publicUserSelect} from "../../common/public-user";
-import {getCurrentISTTime, getTodayDateIST} from "../../utils/date";
+import {getCurrentISTTime, getTodayDateIST, IST_TIMEZONE} from "../../utils/date";
 import {CreateClassV2Dto, MarkAttendanceDto, UpdateClassV2Dto} from "./schema";
 
 const studentSelect = {
@@ -437,6 +437,101 @@ const deleteClass = async (classId: number, userId: number, role: UserRole) => {
     });
 };
 
+/**
+ * 8. Get monthly attendance summary preview in IST
+ */
+const getAttendanceSummary = async (
+    userId: number,
+    role: UserRole,
+    month: string,
+    filterTeacherId?: number
+) => {
+    let effectiveTeacherId: number | undefined;
+
+    if (role === UserRole.TEACHER) {
+        if (filterTeacherId && filterTeacherId !== userId) {
+            throw new AppError("Forbidden: Teachers can only view their own attendance summary", 403);
+        }
+        effectiveTeacherId = userId;
+    } else if (role === UserRole.ADMIN) {
+        effectiveTeacherId = filterTeacherId;
+    } else {
+        throw new AppError("Forbidden: insufficient role permissions", 403);
+    }
+
+    if (role === UserRole.ADMIN && effectiveTeacherId) {
+        const teacher = await prisma.teacher.findUnique({
+            where: {userId: effectiveTeacherId},
+        });
+        if (!teacher) {
+            throw new AppError("Teacher not found", 404);
+        }
+    }
+
+    const todayIST = getTodayDateIST();
+    const where: Prisma.ClassV2WhereInput = {
+        status: Status.ACTIVE,
+        date: {
+            startsWith: month,
+            lte: todayIST,
+        },
+        ...(effectiveTeacherId ? {teacherId: effectiveTeacherId} : {}),
+    };
+
+    const records = await prisma.classV2.findMany({
+        where,
+        select: {
+            attendanceStatus: true,
+        },
+    });
+
+    const totalClasses = records.length;
+    let allPresent = 0;
+    let teacherPresentOnly = 0;
+    let studentPresentOnly = 0;
+    let absent = 0;
+    let pending = 0;
+
+    for (const record of records) {
+        switch (record.attendanceStatus) {
+            case ClassAttendanceStatus.ALL_PRESENT:
+                allPresent++;
+                break;
+            case ClassAttendanceStatus.TEACHER_PRESENT:
+                teacherPresentOnly++;
+                break;
+            case ClassAttendanceStatus.STUDENT_PRESENT:
+                studentPresentOnly++;
+                break;
+            case ClassAttendanceStatus.ABSENT:
+                absent++;
+                break;
+            case ClassAttendanceStatus.PENDING:
+            default:
+                pending++;
+                break;
+        }
+    }
+
+    const attendanceRate = totalClasses > 0
+        ? Number(((allPresent / totalClasses) * 100).toFixed(1))
+        : 0;
+
+    return {
+        month,
+        timezone: IST_TIMEZONE,
+        summary: {
+            totalClasses,
+            allPresent,
+            teacherPresentOnly,
+            studentPresentOnly,
+            absent,
+            pending,
+            attendanceRate,
+        },
+    };
+};
+
 export const ClassV2Service = {
     createClass,
     getActiveOrUpcomingClasses,
@@ -445,4 +540,5 @@ export const ClassV2Service = {
     getClassById,
     updateClass,
     deleteClass,
+    getAttendanceSummary,
 };

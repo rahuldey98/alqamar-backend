@@ -85,6 +85,14 @@ export const deleteClassV2Schema = z.object({
     }),
 });
 
+export const getAttendanceSummarySchema = z.object({
+    query: z.object({
+        month: z.string().regex(/^\d{4}-(?:0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format (e.g. 2026-08)"),
+        teacherId: z.string().regex(/^\d+$/, "teacherId must be a number").transform(Number).optional(),
+    }),
+});
+
 export type CreateClassV2Dto = z.infer<typeof classV2BodySchema>;
 export type UpdateClassV2Dto = z.infer<typeof updateClassV2BodySchema>;
 export type MarkAttendanceDto = z.infer<typeof markAttendanceSchema>["body"];
+export type GetAttendanceSummaryDto = z.infer<typeof getAttendanceSummarySchema>["query"];

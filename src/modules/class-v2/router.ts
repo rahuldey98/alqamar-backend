@@ -6,6 +6,7 @@ import {
     createClassV2Schema,
     deleteClassV2Schema,
     getAttendanceSchema,
+    getAttendanceSummarySchema,
     markAttendanceSchema,
     updateClassV2Schema
 } from "./schema";
@@ -14,6 +15,7 @@ import {
     deleteClass,
     getActiveClasses,
     getAttendance,
+    getAttendanceSummary,
     getClassById,
     markAttendance,
     updateClass
@@ -44,6 +46,14 @@ router.get(
     requireRole(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT),
     validateRequest(getAttendanceSchema),
     getAttendance
+);
+
+// 4. Get monthly attendance summary preview in IST (?month=YYYY-MM&teacherId=)
+router.get(
+    "/attendance/summary",
+    requireRole(UserRole.ADMIN, UserRole.TEACHER),
+    validateRequest(getAttendanceSummarySchema),
+    getAttendanceSummary
 );
 
 // 4. Mark attendance for a class (supports both POST and PATCH)

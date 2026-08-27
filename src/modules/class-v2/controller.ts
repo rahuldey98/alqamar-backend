@@ -81,3 +81,16 @@ export const deleteClass = async (req: AuthRequest, res: Response, next: NextFun
         next(e);
     }
 };
+
+export const getAttendanceSummary = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = Number(req.user!.userId);
+        const role = req.user!.role;
+        const month = req.query.month as string;
+        const teacherId = req.query.teacherId ? Number(req.query.teacherId) : undefined;
+        const result = await ClassV2Service.getAttendanceSummary(userId, role, month, teacherId);
+        sendResponse(res, result);
+    } catch (e) {
+        next(e);
+    }
+};
