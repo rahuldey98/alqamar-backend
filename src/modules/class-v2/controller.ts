@@ -94,3 +94,15 @@ export const getAttendanceSummary = async (req: AuthRequest, res: Response, next
         next(e);
     }
 };
+
+export const reconcileAttendance = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const count = await ClassV2Service.reconcileUnattendedClasses();
+        sendResponse(res, {
+            message: "Attendance reconciled successfully",
+            markedAbsentCount: count,
+        });
+    } catch (e) {
+        next(e);
+    }
+};

@@ -18,6 +18,7 @@ import {
     getAttendanceSummary,
     getClassById,
     markAttendance,
+    reconcileAttendance,
     updateClass
 } from "./controller";
 
@@ -85,6 +86,13 @@ router.delete(
     requireRole(UserRole.ADMIN, UserRole.TEACHER),
     validateRequest(deleteClassV2Schema),
     deleteClass
+);
+
+// 8. Reconcile unattended classes to ABSENT (Admin only)
+router.post(
+    "/reconcile-attendance",
+    requireRole(UserRole.ADMIN),
+    reconcileAttendance
 );
 
 export default router;

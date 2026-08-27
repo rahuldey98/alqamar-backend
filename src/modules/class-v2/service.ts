@@ -532,6 +532,36 @@ const getAttendanceSummary = async (
     };
 };
 
+/**
+ * 9. Reconcile unattended active classes whose class time has passed,
+ * marking them as ABSENT in the database.
+ */
+const reconcileUnattendedClasses = async (): Promise<number> => {
+    const todayDate = getTodayDateIST();
+    const currentTime = getCurrentISTTime();
+
+    const result = await prisma.classV2.updateMany({
+        where: {
+            status: Status.ACTIVE,
+            attendanceStatus: ClassAttendanceStatus.PENDING,
+            OR: [
+                {
+                    date: {lt: todayDate},
+                },
+                {
+                    date: todayDate,
+                    endTime: {lte: currentTime},
+                },
+            ],
+        },
+        data: {
+            attendanceStatus: ClassAttendanceStatus.ABSENT,
+        },
+    });
+
+    return result.count;
+};
+
 export const ClassV2Service = {
     createClass,
     getActiveOrUpcomingClasses,
@@ -541,4 +571,5 @@ export const ClassV2Service = {
     updateClass,
     deleteClass,
     getAttendanceSummary,
+    reconcileUnattendedClasses,
 };

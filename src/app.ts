@@ -12,6 +12,7 @@ import {allowAccessControl} from "./common/middleware/cors.middleware";
 import {requestLogger} from "./common/middleware/request-logger";
 import {apiRateLimiter} from "./common/middleware/rate-limit.middleware";
 import {logger} from "./common/logger";
+import {startClassV2Sweeper} from "./modules/class-v2/sweeper";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -39,4 +40,5 @@ app.use(errorHandler);
 
 app.listen(port, () => {
     logger.info(`Server is running on port: ${port}`);
+    startClassV2Sweeper();
 });
