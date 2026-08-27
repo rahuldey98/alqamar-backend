@@ -2,6 +2,7 @@ import {NextFunction, Request, Response} from "express"
 import {ClassService} from "./service";
 import {sendResponse} from "../../common/send-response";
 import {AuthRequest} from "../../common/auth-request";
+import {AppError} from "../../common/app-error";
 
 export const createClasses = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -39,19 +40,17 @@ export const getClassesById = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const getTodayClasses = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getTodayClasses = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const classes = await ClassService.getTodayClasses(Number(req.user!.userId), req.user!.role)
-        sendResponse(res, classes)
+        throw new AppError("Please update to the latest app version from the Play Store.", 410);
     } catch (e) {
         next(e)
     }
 }
 
-export const getSchedules = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getSchedules = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const schedules = await ClassService.getSchedules(Number(req.user!.userId), req.user!.role)
-        sendResponse(res, schedules)
+        throw new AppError("Please update to the latest app version from the Play Store.", 410);
     } catch (e) {
         next(e)
     }

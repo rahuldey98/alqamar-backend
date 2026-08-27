@@ -1,11 +1,23 @@
 import {Router} from "express";
 import {UserRole} from "@prisma/client";
-import {createClasses, getClassAttendance, getClasses, getClassesById, getSchedules, getTodayClasses, updateClasses} from "./controller";
+import {
+    createClasses,
+    getClassAttendance,
+    getClasses,
+    getClassesById,
+    getSchedules,
+    getTodayClasses,
+    updateClasses
+} from "./controller";
 import {validateRequest} from "../../common/middleware/validate.middleware";
 import {createClassesSchema, getClassAttendanceSchema, updateClassesSchema} from "./schema";
 import {requireAuth, requireRole} from "../../common/middleware/auth.middleware";
 
 const router = Router()
+
+// Deprecated endpoints
+router.get("/today", getTodayClasses);
+router.get("/schedules", getSchedules);
 
 router.use(requireAuth);
 
@@ -16,16 +28,6 @@ router.post("/",
 )
 
 router.get("/", getClasses)
-
-router.get("/today",
-    requireRole(UserRole.TEACHER, UserRole.STUDENT),
-    getTodayClasses
-)
-
-router.get("/schedules",
-    requireRole(UserRole.TEACHER, UserRole.STUDENT),
-    getSchedules
-)
 
 router.get("/attendance",
     requireRole(UserRole.ADMIN),

@@ -246,6 +246,9 @@ const updateClasses = async (id: number, data: Partial<ClassesRequestDto>) => {
     });
 }
 
+/**
+ * @deprecated Deprecated in favor of ClassV2Service.
+ */
 const getSchedules = async (userId: number, role: UserRole) => {
     const classes = await prisma.class.findMany({
         where: {
@@ -295,6 +298,9 @@ const getSchedules = async (userId: number, role: UserRole) => {
     })
 }
 
+/**
+ * @deprecated Deprecated in favor of ClassV2Service.
+ */
 const getTodayClasses = async (userId: number, role: UserRole) => {
     const today = getCurrentDayOfWeek();
 
